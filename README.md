@@ -1,16 +1,36 @@
 AutoCut - Shortcuts
 ===================
 
+论文链接：
+[《Autocuts: simultaneous distortion and cut optimization for UV mapping》](https://dl.acm.org/doi/10.1145/3130800.3130845)
 
+## 环境依赖
+- Windows10+
+- Visual Studio 2022
+- C++ v143 生成工具
+- Cmake
 ## 快速开始
 
-使用git clone 并递归拉取全部子模块
+使用git clone 拉取
+```bash
+git clone https://github.com/CGandGameEngineLearner/Autocuts.git
 ```
-git clone --recurse-submodules  https://github.com/CGandGameEngineLearner/Autocuts.git
-```
+打开Cmake GUI
+Where is the source code: 填入当前项目路径
+Where to build the binaries: 在拉取的项目文件夹下创建一个libigl-AutoCuts文件夹，填写此文件夹路径
+点击Configure，选择Visual Studio 2022，执行完后再点击Generate
+![Cmake GUI](./illustration/p1.png)
+等待加载完毕后，在libigl-AutoCuts文件夹下可以看到生成的解决方案`Autocuts.sln`，使用Visual Studio打开它。
+把Autocuts_bin设置为启动项目，在Debug x64配置下点击启动调试，即可编译并运行此项目，如下图：
+![Cmake GUI](./illustration/p2.png)
 
+运行效果如下
 
+![运行截图](./illustration/p3.png)
 
+右侧Mesh Load按钮载入模型，本项目提供了一些模型在mesh文件夹中，可以用来使用，注意模型格式必须为obj格式.
+
+左侧Run键运行，lamda值必须取值范围为(0,1)开区间，如果刚好为0或1可能会卡死，原理可以看原论文。
 
 Controlling the Mesh
 --------------------
