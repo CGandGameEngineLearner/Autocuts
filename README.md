@@ -43,6 +43,10 @@ Where to build the binaries: 在拉取的项目文件夹下创建一个libigl-Au
 
 左侧Run键运行，lamda值必须取值范围为(0,1)开区间，如果刚好为0或1可能会卡死，原理可以看原论文。
 
+以下是载入`cathead.obj`模型得到的效果
+
+![cathead.obj](./illustration/p4.png)
+
 Controlling the Mesh
 --------------------
 LEFT ALT + MID MOUSE:
