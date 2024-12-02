@@ -1,8 +1,10 @@
-AutoCut - Shortcuts
+Autocuts: simultaneous distortion and cut optimization for UV mapping
 ===================
 
 论文链接：
 [《Autocuts: simultaneous distortion and cut optimization for UV mapping》](https://dl.acm.org/doi/10.1145/3130800.3130845)
+中文翻译版论文：
+[《自动切割时同时进行反失真和切割优化，以实现UV映射》](./docs/自动切割时同时进行反失真和切割优化，以实现%20UV%20映射.md)
 
 ## 环境依赖
 - Windows10+
