@@ -3,15 +3,19 @@ Autocuts: simultaneous distortion and cut optimization for UV mapping
 
 论文链接：
 [《Autocuts: simultaneous distortion and cut optimization for UV mapping》](https://dl.acm.org/doi/10.1145/3130800.3130845)
+
 中文翻译版论文：
 [《自动切割时同时进行反失真和切割优化，以实现UV映射》](./docs/自动切割时同时进行反失真和切割优化，以实现%20UV%20映射.md)
+
+原项目链接：
+[Autocuts](https://github.com/Roipo/Autocuts)
 
 ## 环境依赖
 - Windows10+
 - Visual Studio 2022
 - C++ v143 生成工具
-- Cmake
-## 快速开始
+- Cmake 3.25.1
+## 配置开发环境
 
 使用git clone 拉取
 ```bash
