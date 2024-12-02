@@ -1,13 +1,18 @@
 Autocuts: simultaneous distortion and cut optimization for UV mapping
 ===================
+> 本项目为Autocuts的分支版本，由于原项目是2017年的了，其使用的部分第三方依赖库已停止维护，本项目更新和修复了原版本中的一些问题，使得其能在2024年的环境下编译和运行。
 
 论文链接：
+
 [《Autocuts: simultaneous distortion and cut optimization for UV mapping》](https://dl.acm.org/doi/10.1145/3130800.3130845)
 
+
 中文翻译版论文：
+
 [《自动切割时同时进行反失真和切割优化，以实现UV映射》](./docs/自动切割时同时进行反失真和切割优化，以实现%20UV%20映射.md)
 
 原项目链接：
+
 [Autocuts](https://github.com/Roipo/Autocuts)
 
 ## 环境依赖
