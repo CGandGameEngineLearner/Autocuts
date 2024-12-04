@@ -39,7 +39,7 @@ public:
     // 更新 alpha 值
     void update_alphas(const Mat& weights, double max_possible);
 
-    // 稀疏矩阵，用于存储各种变量
+    // 稀疏矩阵，用于存储各种变量	
     SpMat EVvar1, EVvar2, Esep, Esept, V2V, V2Vt;
     SpMat C2C; // Corner to corner
     MatX2 EsepP;

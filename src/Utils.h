@@ -39,15 +39,43 @@ public:
 
 	static void get_soup_and_helper_matrices(const MatX3& V_in, const MatX3i& F, SpMat& EVvar1, SpMat& EVvar2, SpMat& V2V)
 	{
+		// 定义一些中间变量
+		// Define some intermediate variables
 		MatX3 V, Vs3d_similar;
 		MatX3i Fs;
+	
+		// 初始化网格
+		// Initialize the mesh
 		init_mesh(V_in, F, V, E);
+	
+		// 生成与输入网格相似的3D网格
+		// Generate a 3D mesh similar to the input mesh
 		generate_soup_3d_similar(V, F, Vs3d_similar, Fs);
+	
+		// 计算网格的边
+		// Compute the edges of the mesh
 		compute_edges(Fs, Es);
-		nvs = Vs3d_similar.rows(); nfs = Fs.rows(); nes = Es.rows();
+	
+		// 获取顶点和面的数量
+		// Get the number of vertices and faces
+		nvs = Vs3d_similar.rows();
+		nfs = Fs.rows();
+		nes = Es.rows();
+	
+		// 计算顶点到顶点的稀疏矩阵
+		// Compute the vertex-to-vertex sparse matrix
 		compute_V2V(F, V2V);
+	
+		// 定义一个中间变量 E2Edt
+		// Define an intermediate variable E2Edt
 		Mat E2Edt;
+	
+		// 计算边到边的稀疏矩阵
+		// Compute the edge-to-edge sparse matrix
 		compute_E2E(V2V, E2Edt);
+	
+		// 计算 EVvar1 和 EVvar2 矩阵
+		// Compute the EVvar1 and EVvar2 matrices
 		compute_EVvars(Fs, E2Edt, EVvar1, EVvar2);
 	}
 

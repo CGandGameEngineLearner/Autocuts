@@ -16,35 +16,54 @@ Separation::Separation()
 
 void Separation::init(int n)
 {
-	// wedges energy
-	igl::cat(1, EVvar1, EVvar2, Esep);
-	Esept = Esep.transpose();
-// 	Triplets C2CTriplets;
-	for (int i = 0; i < Esept.outerSize(); ++i)
-	{
-		// no inner loop because there are only 2 nnz values per col
-		SpMat::InnerIterator it(Esept, i);
-		int idx_xi = it.row();
-		int idx_xj = (++it).row();
-		pair<int, int> p(idx_xi, idx_xj);
-		pair2ind.push_back(p);
-		ind2pair.emplace(p, i);
-		ind2pair.emplace(std::make_pair(p.second,p.first) , i);
-	}
+    // 合并 EVvar1 和 EVvar2 矩阵到 Esep
+    // Concatenate EVvar1 and EVvar2 matrices into Esep
+    igl::cat(1, EVvar1, EVvar2, Esep);
 
-	V2Vt = V2V.transpose();
-	C2C = V2Vt*V2V;
- 	SpMat I(V2V.cols(), V2V.cols());
- 	I.setIdentity();
-	C2C -= I;
-	C2C.prune(0,0);
-	prepare_hessian(n);
+    // 转置 Esep 矩阵并赋值给 Esept
+    // Transpose Esep matrix and assign it to Esept
+    Esept = Esep.transpose();
 
-	connect_alphas = Vec::Zero(Esep.rows());
-	disconnect_alphas = Vec::Ones(Esep.rows());
+    // 遍历 Esept 矩阵的每一列
+    // Iterate over each column of Esept matrix
+    for (int i = 0; i < Esept.outerSize(); ++i)
+    {
+        // 没有内部循环，因为每列只有2个非零值
+        // No inner loop because there are only 2 non-zero values per column
+        SpMat::InnerIterator it(Esept, i);
+        int idx_xi = it.row();
+        int idx_xj = (++it).row();
+        pair<int, int> p(idx_xi, idx_xj);
+        pair2ind.push_back(p);
+        ind2pair.emplace(p, i);
+        ind2pair.emplace(std::make_pair(p.second, p.first), i);
+    }
 
-	edge_lenghts_per_pair = Vec::Ones(Esept.cols());
-	no_seam_constraints_per_pair = Vec::Zero(Esept.cols());
+    // 转置 V2V 矩阵并赋值给 V2Vt
+    // Transpose V2V matrix and assign it to V2Vt
+    V2Vt = V2V.transpose();
+
+    // 计算 C2C 矩阵
+    // Compute C2C matrix
+    C2C = V2Vt * V2V;
+    SpMat I(V2V.cols(), V2V.cols());
+    I.setIdentity();
+    C2C -= I;
+    C2C.prune(0, 0);
+
+    // 准备 Hessian 矩阵
+    // Prepare Hessian matrix
+    prepare_hessian(n);
+
+    // 初始化 connect_alphas 和 disconnect_alphas 向量
+    // Initialize connect_alphas and disconnect_alphas vectors
+    connect_alphas = Vec::Zero(Esep.rows());
+    disconnect_alphas = Vec::Ones(Esep.rows());
+
+    // 初始化 edge_lenghts_per_pair 和 no_seam_constraints_per_pair 向量
+    // Initialize edge_lenghts_per_pair and no_seam_constraints_per_pair vectors
+    edge_lenghts_per_pair = Vec::Ones(Esept.cols());
+    no_seam_constraints_per_pair = Vec::Zero(Esept.cols());
 }
 
 void Separation::value(const MatX2& X, double& f)
@@ -162,43 +181,58 @@ void Separation::gradient(const MatX2& X, Vec& g)
 
 void Separation::hessian(const MatX2& X)
 {
-	int n = X.rows();
-	int threads = omp_get_max_threads();
-#pragma omp parallel for num_threads(threads)
-	for (int i = 0; i < Esept.outerSize(); ++i)
-	{ // no inner loop because there are only 2 nnz values per col
-		int tid = omp_get_thread_num();
-		Vec2 xi, xj;
-		Mat4 sh;
-		int idx_xi, idx_xj, factor;
-		SpMat::InnerIterator it(Esept, i);
-		idx_xi = it.row();
-		factor = it.value();
-		idx_xj = (++it).row();
-		xi = X.row(idx_xi);
-		xj = X.row(idx_xj);
-		find_single_hessian(xi, xj, sh);
-		sh *= factor;
-		// add the additional factors like coloring and edge splitting/merging
-		Mat4 Esep4;
-		Esep4 << 1, 0, -1, 0,
-			0, 1, 0, -1,
-			-1, 0, 1, 0,
-			0, -1, 0, 1;
-		sh += Esep4 * (connect_alphas(i) + no_seam_constraints_per_pair(i));
-		sh *= edge_lenghts_per_pair(i);
-		sh *= disconnect_alphas(i);
-		//sh *= no_seam_constraints_per_pair(i);
+    int n = X.rows();
+    int threads = omp_get_max_threads();
 
-		int ind = 10 * i;
-		for (int a = 0; a < 4; ++a)
-		{
-			for (int b = 0; b <= a; ++b)
-			{
-				SS[ind++] = sh(b, a);
-			}
-		}
-	}
+	// 使用 OpenMP 并行计算 Hessian 矩阵 按列并行计算
+#pragma omp parallel for num_threads(threads)
+    for (int i = 0; i < Esept.outerSize(); ++i)
+    { 
+		
+        // 没有内部循环，因为每列只有2个非零值
+        // No inner loop because there are only 2 non-zero values per column
+        int tid = omp_get_thread_num();
+        Vec2 xi, xj;
+        Mat4 sh;
+        int idx_xi, idx_xj, factor;
+        SpMat::InnerIterator it(Esept, i);
+        idx_xi = it.row();
+        factor = it.value();
+        idx_xj = (++it).row();
+        xi = X.row(idx_xi);
+        xj = X.row(idx_xj);
+        find_single_hessian(xi, xj, sh);
+        sh *= factor;
+
+        // 添加额外的因子，如着色和边缘分裂/合并
+        // Add the additional factors like coloring and edge splitting/merging
+        Mat4 Esep4;
+        Esep4 << 1, 0, -1, 0,
+                 0, 1, 0, -1,
+                -1, 0, 1, 0,
+                 0, -1, 0, 1;
+        sh += Esep4 * (connect_alphas(i) + no_seam_constraints_per_pair(i));
+        sh *= edge_lenghts_per_pair(i);
+        sh *= disconnect_alphas(i);
+        //sh *= no_seam_constraints_per_pair(i);
+
+        // 将 Hessian 矩阵的上三角部分存储到 SS 向量中
+        // Store the upper triangular part of the Hessian matrix into the SS vector
+		// | idx_xi     idx_xi+n   idx_xj     idx_xj+n   |
+		// |---------------------------------------------|
+		// | sh(0,0)    sh(0,1)    sh(0,2)    sh(0,3)    |
+		// |            sh(1,1)    sh(1,2)    sh(1,3)    |
+		// |                       sh(2,2)    sh(2,3)    |
+		// |                                  sh(3,3)    |
+        int ind = 10 * i;
+        for (int a = 0; a < 4; ++a)
+        {
+            for (int b = 0; b <= a; ++b)
+            {
+                SS[ind++] = sh(b, a);
+            }
+        }
+    }
 }
 
 void Separation::prepare_hessian(int n)
