@@ -205,120 +205,211 @@ void Separation::prepare_hessian(int n)
 	SS = vector<double>(II.size(), 0.);
 }
 
+// 请见论文附录中的 APPENDIX A SEPARATION GRADIENT AND HESSIAN
 void Separation::find_single_hessian(const Vec2& xi, const Vec2& xj, Mat4& h)
 {
-	bool speedup = true;
-	Vec2 dx = xi - xj;
-	Vec4 dxx;
-	dxx << dx, -dx;
-	double t = 0.5*dx.squaredNorm();
-	double fp, fpp;
-	switch (sepEType)
-	{
-		case SeparationEnergy::LOG:
-			break;
-		case SeparationEnergy::QUADRATIC:
-			break;
-		case SeparationEnergy::FLAT_LOG:
-		{
-			flat_log_single_hessian(xi, xj, h);
-			//fp = delta / ((t + delta) * (2*t + delta));
-			//fpp = -fp * fp * (3 + ((4 * t) / delta));
-			//fpp = -(delta * (3 * delta + 4 * t) / ((delta + t)*(delta + t)*(delta + 2 * t)*(delta + 2 * t)));
-			break;
-		}
-		case SeparationEnergy::QUOTIENT:
-		{
-			fp = delta / ((t + delta)*(t + delta));
- 			fpp = -2 * fp / (t + delta);
-			Mat4 Esep4;
-			Esep4 << 1, 0, -1, 0,
-				     0, 1, 0, -1,
-				    -1, 0, 1,  0,
-				     0, -1, 0, 1;
-			h = fpp*dxx*dxx.transpose() + fp*Esep4;
-			h = fp*Esep4;
-			break;
-		}
-		case SeparationEnergy::QUOTIENT_NEW:
-		{
-			fp = delta / ((t + delta)*(t + delta));
-			Mat4 Esep4;
-			Esep4 << 1, 0, -1, 0,
-				0, 1, 0, -1,
-				-1, 0, 1, 0,
-				0, -1, 0, 1;
-			h = fp*Esep4;
-			break;
-		}
-		default:
-			break;
-	}
-	if(sepEType!=SeparationEnergy::QUOTIENT_NEW)
- 		make_spd(h);
+    // 是否启用加速
+    bool speedup = true;
+
+    // 计算 xi 和 xj 之间的差值
+    Vec2 dx = xi - xj;
+
+    // 构造一个包含差值和负差值的向量
+    Vec4 dxx;
+    dxx << dx, -dx;
+
+    // 计算差值的平方和的一半
+    double t = 0.5 * dx.squaredNorm();
+
+    // 定义变量以存储一阶和二阶导数
+    double fp, fpp;
+
+    // 根据分离能量类型选择不同的计算方法
+    switch (sepEType)
+    {
+        case SeparationEnergy::LOG:
+            // LOG 类型的 Hessian 计算（未实现）
+            break;
+        case SeparationEnergy::QUADRATIC:
+            // QUADRATIC 类型的 Hessian 计算（未实现）
+            break;
+        case SeparationEnergy::FLAT_LOG:
+        {
+            // 计算 FLAT_LOG 类型的 Hessian 矩阵
+            flat_log_single_hessian(xi, xj, h);
+            break;
+        }
+        case SeparationEnergy::QUOTIENT:
+        {
+            // 计算 QUOTIENT 类型的 Hessian 矩阵
+            fp = delta / ((t + delta) * (t + delta));
+            fpp = -2 * fp / (t + delta);
+            Mat4 Esep4;
+            Esep4 << 1, 0, -1, 0,
+                     0, 1, 0, -1,
+                    -1, 0, 1,  0,
+                     0, -1, 0, 1;
+            h = fpp * dxx * dxx.transpose() + fp * Esep4;
+            h = fp * Esep4;
+            break;
+        }
+        case SeparationEnergy::QUOTIENT_NEW:
+        {
+            // 计算 QUOTIENT_NEW 类型的 Hessian 矩阵
+            fp = delta / ((t + delta) * (t + delta));
+            Mat4 Esep4;
+            Esep4 << 1, 0, -1, 0,
+                     0, 1, 0, -1,
+                    -1, 0, 1, 0,
+                     0, -1, 0, 1;
+            h = fp * Esep4;
+            break;
+        }
+        default:
+            // 未实现的分离能量类型
+            break;
+    }
+
+    // 如果分离能量类型不是 QUOTIENT_NEW，则将 Hessian 矩阵转换为正定矩阵
+    if (sepEType != SeparationEnergy::QUOTIENT_NEW)
+        make_spd(h);
 }
 
 void Separation::flat_log_single_hessian(const Vec2& xi, const Vec2& xj, Mat4& h)
 {
-	double xi1 = xi(0), xi2 = xi(1);
-	double xj1 = xj(0), xj2 = xj(1);
-	double t4 = xi1 - xj1;
-	double t2 = abs(t4);
-	double t6 = xi2 - xj2;
-	double t3 = abs(t6);
-	double t5 = t2*t2;
-	double t7 = t3*t3;
-	double t8 = delta + t5 + t7;
-	double t9 = 1.0 / t8;
-	double t10 = sign(t4);
-	double t11 = t5 + t7;
-	double t16 = 1.0 / (t8*t8);
-	double t22 = t2*t9*t10*2.0;
-	double t23 = t2*t10*t11*t16*2.0;
-	double t12 = t22 - t23;
-	double t13 = t9*t11;
-	double t14 = t13 + 1.0;
-	double t15 = t10*t10;
-	double t17 = dirac(t4);
-	double t18 = 1.0 / t14;
-	double t19 = sign(t6);
-	double t20 = 1.0 / (t8*t8*t8);
-	double t21 = 1.0 / (t14*t14);
-	double t24 = t12*t12;
-	double t25 = t9*t15*2.0;
-	double t26 = t2*t9*t17*4.0;
-	double t27 = t5*t11*t15*t20*8.0;
-	double t48 = t11*t15*t16*2.0;
-	double t49 = t5*t15*t16*8.0;
-	double t50 = t2*t11*t16*t17*4.0;
-	double t28 = t25 + t26 + t27 - t48 - t49 - t50;
-	double t29 = Lsep*t18*t28;
-	double t30 = t2*t3*t10*t16*t19*8.0;
-	double t34 = t2*t3*t10*t11*t19*t20*8.0;
-	double t31 = t30 - t34;
-	double t32 = t3*t9*t19*2.0;
-	double t36 = t3*t11*t16*t19*2.0;
-	double t33 = t32 - t36;
-	double t35 = Lsep*t18*t31;
-	double t37 = Lsep*t12*t21*t33;
-	double t38 = t19*t19;
-	double t39 = dirac(t6);
-	double t40 = t35 + t37;
-	double t41 = t33*t33;
-	double t42 = t9*t38*2.0;
-	double t43 = t3*t9*t39*4.0;
-	double t44 = t7*t11*t20*t38*8.0;
-	double t54 = t11*t16*t38*2.0;
-	double t55 = t7*t16*t38*8.0;
-	double t56 = t3*t11*t16*t39*4.0;
-	double t45 = t42 + t43 + t44 - t54 - t55 - t56;
-	double t46 = Lsep*t18*t45;
-	double t47 = Lsep*t21*t24;
-	double t51 = -t29 + t47;
-	double t52 = -t35 - t37;
-	double t53 = Lsep*t21*t41;
-	double t57 = -t46 + t53;
-	h << t29 - Lsep*t21*t24, t52, t51, t40, -Lsep*t18*t31 - Lsep*t12*t21*t33, t46 - Lsep*t21*t41, t40, t57, t51, t40, t29 - t47, t52, t40, t57, t52, t46 - t53;
+    // 提取 xi 和 xj 的坐标分量
+    double xi1 = xi(0), xi2 = xi(1);
+    double xj1 = xj(0), xj2 = xj(1);
+
+    // 计算 xi 和 xj 之间的差值
+    double t4 = xi1 - xj1;
+    double t2 = abs(t4);
+    double t6 = xi2 - xj2;
+    double t3 = abs(t6);
+
+    // 计算差值的平方
+    double t5 = t2 * t2;
+    double t7 = t3 * t3;
+
+    // 计算 delta 和差值平方和的和
+    double t8 = delta + t5 + t7;
+
+    // 计算 1/t8
+    double t9 = 1.0 / t8;
+
+    // 计算 t4 的符号
+    double t10 = sign(t4);
+
+    // 计算差值平方和
+    double t11 = t5 + t7;
+
+    // 计算 1/(t8*t8)
+    double t16 = 1.0 / (t8 * t8);
+
+    // 计算中间变量 t22 和 t23
+    double t22 = t2 * t9 * t10 * 2.0;
+    double t23 = t2 * t10 * t11 * t16 * 2.0;
+
+    // 计算 t12
+    double t12 = t22 - t23;
+
+    // 计算 t13 和 t14
+    double t13 = t9 * t11;
+    double t14 = t13 + 1.0;
+
+    // 计算 t15 和 t17
+    double t15 = t10 * t10;
+    double t17 = dirac(t4);
+
+    // 计算 1/t14 和 1/(t14*t14)
+    double t18 = 1.0 / t14;
+    double t21 = 1.0 / (t14 * t14);
+
+    // 计算 t19 和 t20
+    double t19 = sign(t6);
+    double t20 = 1.0 / (t8 * t8 * t8);
+
+    // 计算 t24 和 t25
+    double t24 = t12 * t12;
+    double t25 = t9 * t15 * 2.0;
+
+    // 计算 t26 和 t27
+    double t26 = t2 * t9 * t17 * 4.0;
+    double t27 = t5 * t11 * t15 * t20 * 8.0;
+
+    // 计算 t48, t49 和 t50
+    double t48 = t11 * t15 * t16 * 2.0;
+    double t49 = t5 * t15 * t16 * 8.0;
+    double t50 = t2 * t11 * t16 * t17 * 4.0;
+
+    // 计算 t28
+    double t28 = t25 + t26 + t27 - t48 - t49 - t50;
+
+    // 计算 t29
+    double t29 = Lsep * t18 * t28;
+
+    // 计算 t30 和 t34
+    double t30 = t2 * t3 * t10 * t16 * t19 * 8.0;
+    double t34 = t2 * t3 * t10 * t11 * t19 * t20 * 8.0;
+
+    // 计算 t31
+    double t31 = t30 - t34;
+
+    // 计算 t32 和 t36
+    double t32 = t3 * t9 * t19 * 2.0;
+    double t36 = t3 * t11 * t16 * t19 * 2.0;
+
+    // 计算 t33
+    double t33 = t32 - t36;
+
+    // 计算 t35 和 t37
+    double t35 = Lsep * t18 * t31;
+    double t37 = Lsep * t12 * t21 * t33;
+
+    // 计算 t38 和 t39
+    double t38 = t19 * t19;
+    double t39 = dirac(t6);
+
+    // 计算 t40
+    double t40 = t35 + t37;
+
+    // 计算 t41
+    double t41 = t33 * t33;
+
+    // 计算 t42, t43 和 t44
+    double t42 = t9 * t38 * 2.0;
+    double t43 = t3 * t9 * t39 * 4.0;
+    double t44 = t7 * t11 * t20 * t38 * 8.0;
+
+    // 计算 t54, t55 和 t56
+    double t54 = t11 * t16 * t38 * 2.0;
+    double t55 = t7 * t16 * t38 * 8.0;
+    double t56 = t3 * t11 * t16 * t39 * 4.0;
+
+    // 计算 t45
+    double t45 = t42 + t43 + t44 - t54 - t55 - t56;
+
+    // 计算 t46
+    double t46 = Lsep * t18 * t45;
+
+    // 计算 t47
+    double t47 = Lsep * t21 * t24;
+
+    // 计算 t51 和 t52
+    double t51 = -t29 + t47;
+    double t52 = -t35 - t37;
+
+    // 计算 t53
+    double t53 = Lsep * t21 * t41;
+
+    // 计算 t57
+    double t57 = -t46 + t53;
+
+    // 填充 Hessian 矩阵 h
+    h << t29 - Lsep * t21 * t24, t52, t51, t40,
+         -Lsep * t18 * t31 - Lsep * t12 * t21 * t33, t46 - Lsep * t21 * t41, t40, t57,
+         t51, t40, t29 - t47, t52,
+         t40, t57, t52, t46 - t53;
 }
 
 inline int Separation::sign(double val)

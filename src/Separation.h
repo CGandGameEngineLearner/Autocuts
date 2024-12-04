@@ -1,8 +1,10 @@
 #pragma once
 
 #include "EigenTypes.h"
-
 #include <list>
+#include <vector>
+#include <map>
+#include <limits>
 
 using namespace std;
 
@@ -13,60 +15,89 @@ using namespace std;
 class Separation
 {
 public:
-	enum class SeparationEnergy { LOG, QUADRATIC, FLAT_LOG, QUOTIENT, QUOTIENT_NEW };
+    // 枚举类，用于表示不同的分离能量类型
+    enum class SeparationEnergy { LOG, QUADRATIC, FLAT_LOG, QUOTIENT, QUOTIENT_NEW };
 
-	Separation();
+    // 构造函数
+    Separation();
 
-	void init(int n);
-	void value(const MatX2& X, double& f);
-	void gradient(const MatX2& X, Vec& g);
-	void hessian(const MatX2& X);
+    // 初始化函数，接受一个整数参数 n
+    void init(int n);
 
-	void find_single_hessian(const Vec2& xi, const Vec2& xj, Mat4& h);
-	void update_alphas(const Mat& weights, double max_possible);
+    // 计算分离能量值
+    void value(const MatX2& X, double& f);
 
-	SpMat EVvar1, EVvar2, Esep, Esept, V2V, V2Vt;
-	SpMat C2C; //Corner to corner
-	MatX2 EsepP;
+    // 计算分离能量的梯度
+    void gradient(const MatX2& X, Vec& g);
 
-	double Lsep = 1.0, delta = 1.0;
-	SeparationEnergy sepEType = SeparationEnergy::QUOTIENT_NEW;
+    // 计算分离能量的 Hessian 矩阵
+    void hessian(const MatX2& X);
 
-	Vec f_per_pair, f_sep_per_pair;
+    // 计算单个 Hessian 矩阵
+    void find_single_hessian(const Vec2& xi, const Vec2& xj, Mat4& h);
 
-	// pardiso vectors
-	vector<int> II, JJ;
-	vector<double> SS;
+    // 更新 alpha 值
+    void update_alphas(const Mat& weights, double max_possible);
 
-	// force these uv vertices to be connected more closely, used for gradient
-	vector<int> gradient_force_connects;
-	// same for function value, to affect the correct index in f_per_row
-	// since here its already sorted according to pairs
-	vector<int> value_force_connects;
+    // 稀疏矩阵，用于存储各种变量
+    SpMat EVvar1, EVvar2, Esep, Esept, V2V, V2Vt;
+    SpMat C2C; // Corner to corner
+    MatX2 EsepP;
 
-	double force_factor = 10.;
+    // 分离能量的参数
+    double Lsep = 1.0, delta = 1.0;
+    SeparationEnergy sepEType = SeparationEnergy::QUOTIENT_NEW;
 
-	// weighting indicated by the coloring of the mesh
-	// alphas gathered by summing up the factors
-	// for each corner force
-	Vec connect_alphas;
-	// same vars for disconnect
-	Vec disconnect_alphas;
+    // 各对之间的分离能量值
+    Vec f_per_pair, f_sep_per_pair;
 
-	Vec edge_lenghts_per_pair;
-	Vec no_seam_constraints_per_pair;
-	vector<std::pair<int, int>> pair2ind;
-	map<std::pair<int, int>,int> ind2pair;
+    // Pardiso 矢量
+    vector<int> II, JJ;
+    vector<double> SS;
+
+    // 强制这些 UV 顶点更紧密地连接，用于梯度计算
+    vector<int> gradient_force_connects;
+
+    // 同样用于函数值，影响 f_per_row 中的正确索引
+    vector<int> value_force_connects;
+
+    // 强制因子
+    double force_factor = 10.;
+
+    // 网格着色指示的权重
+    // 通过对每个角力的因子求和来收集 alpha 值
+    Vec connect_alphas;
+    // 同样用于断开连接
+    Vec disconnect_alphas;
+
+    // 每对之间的边长
+    Vec edge_lenghts_per_pair;
+    Vec no_seam_constraints_per_pair;
+
+    // 用于存储对索引的映射
+    vector<std::pair<int, int>> pair2ind;
+    map<std::pair<int, int>, int> ind2pair;
+
 private:
-	Vec EsepP_squared_rowwise_sum;
-	Vec EsepP_squared_rowwise_sum_plus_delta;
-	
+    // 内部变量，用于存储 EsepP 的行和的平方和
+    Vec EsepP_squared_rowwise_sum;
+    Vec EsepP_squared_rowwise_sum_plus_delta;
 
-	void flat_log_single_hessian(const Vec2& xi, const Vec2& xj, Mat4& h);
-	void make_spd(Mat4& h);
-	void add_to_global_hessian(const Mat4& sh, int idx_xi, int idx_xj, int n, list<Tripletd>& htriplets);
-	inline int sign(double val);
-	inline double dirac(double val);
+    // 计算单个 FLAT_LOG 类型的 Hessian 矩阵
+    void flat_log_single_hessian(const Vec2& xi, const Vec2& xj, Mat4& h);
 
-	void prepare_hessian(int n);
+    // 将矩阵转换为正定矩阵
+    void make_spd(Mat4& h);
+
+    // 将单个 Hessian 矩阵添加到全局 Hessian 矩阵中
+    void add_to_global_hessian(const Mat4& sh, int idx_xi, int idx_xj, int n, list<Tripletd>& htriplets);
+
+    // 返回值的符号
+    inline int sign(double val);
+
+    // 计算 Dirac 函数值
+    inline double dirac(double val);
+
+    // 准备 Hessian 矩阵
+    void prepare_hessian(int n);
 };
