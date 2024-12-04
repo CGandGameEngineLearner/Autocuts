@@ -209,3 +209,28 @@ $$c(a, b)=\left\{\begin{array}{ll}0,& a\leq b\\ (a-b)^2,& a>b\end{array}\right.\
 ## 5 限制和总结性评论
 
 我们提出了一种算法来解决参数化设计中的一个核心挑战，即在单一能量函数的统一最小化过程中识别切割和最小化扭曲展开。与之前的方法相比，这是一个显著的、定性的改进，之前的方法中这两个问题是通过级联或交替解决的。我们的框架使得整个交互式UV映射创建过程更快、更直观。我们推测，基于我们方法的商业级软件套件将进一步改进它。我们邀请专业艺术家使用我们的软件进行实验，并收到了积极的反馈。初步实验表明，我们的方法可以显著加快手动UV映射的过程。虽然它确实需要对UV映射流程进行轻微的重新调整，但艺术家们表示有兴趣在未来的UV映射任务中使用我们的方法，探索其局限性，并为我们提供案例研究以供未来发展。
+
+
+
+
+## 附录A 分离梯度和Hessian
+
+我们写出了两个角点之间分离度量的梯度和Hessian的表达式。设两个角点为 \( x_{i k_{1}} \) 和 \( x_{i k_{2}} \)。那么它们之间的分离度量（方程(3)）为
+
+\[
+\hat{s}\left(\left\|x_{i k_1}-x_{i k_2}\right\|^2\right), \text{其中} \hat{s}(t)=\frac{t}{t+\delta}.
+\]
+
+梯度和修改后的Hessian \( s \) 如下。定义列向量 \( d=2\left(\begin{array}{c}x_{i k_{1}}-x_{i k_{2}}\\ x_{i k_{2}}-x_{i k_{1}}\end{array}\right) \)。那么 \( \nabla\hat{s}\left(\left\|x_{i k_{1}}-x_{i k_{2}}\right\|^{2}\right)=\frac{\partial\hat{s}}{\partial t}~d \) 并且Hessian \( H \) 为
+
+\[
+H=\nabla^2\hat{s}\left(\left\|x_{i k_1}-x_{i k_2}\right\|^2\right)=\frac{\partial^2\hat{s}}{\partial t^2}d d^\top+\frac{\partial\hat{s}}{\partial t}\left(\begin{matrix}+1& 0&-1& 0\\ 0&+1& 0&-1\\ -1& 0&+1& 0\\ 0&-1& 0&+1\end{matrix}\right)
+\]
+
+为了确保总的Hessian是正定的，一个众所周知的技巧是在将它们加起来之前，将每个面的 \( H \) 投影到正半定矩阵的集合上。这需要为每个面计算一个SVD，可能非常耗时；相反，根据[Shtengel et al. 2017]，我们简单地去除了 \( \nabla^{2}\hat{s} \) 表达式中的非凸部分。表达式中的第二项总是正半定的，而第一项取决于 \( \hat{s} \) 的二阶导数，这可能是负的；因此，去除它会导致一个修改后的正半定 \( H \)：
+
+\[
+\nabla^2\hat{s}\left(\left\|x_{i k_1}-x_{i k_2}\right\|^2\right)=\frac{\partial\hat{s}}{\partial t}E.
+\]
+
+通过使用这个修改后的Hessian，我们观察到帧率的提高，而对收敛性的影响是边缘的。

@@ -194,6 +194,7 @@ void Position::evaluate_fgh(const MatX2& X, double& f, Vec& g, SpMat& h, eval_mo
 	process_triangle_map(fixed_triangles, X, f, g, mode);
 }
 
+// 计算一个单独的三角形面与目标位置之间的差异，并根据这个差异计算函数值f、梯度g和Hessian矩阵h。
 void Position::evaluate_single(const Mat32& current_pos, const Mat32& target_pos, double&f, Vec& g, Mat& h, eval_mode mode)
 {
 	DScalar p11(0, current_pos(0, 0)), p21(1, current_pos(1, 0)), p31(2, current_pos(2, 0));
