@@ -5,6 +5,7 @@
 
 #include "EigenTypes.h"
 
+#include <iostream>
 #include <vector>
 #include <igl/sum.h>
 #include <igl/diag.h>
@@ -77,25 +78,60 @@ public:
 		// 计算 EVvar1 和 EVvar2 矩阵
 		// Compute the EVvar1 and EVvar2 matrices
 		compute_EVvars(Fs, E2Edt, EVvar1, EVvar2);
+
+		// 打印 EVvar1 和 EVvar2 的形状
+		// Print the shapes of EVvar1 and EVvar2
+		std::cout << "EVvar1 shape: " << EVvar1.rows() << " x " << EVvar1.cols() << std::endl;
+		std::cout << "EVvar2 shape: " << EVvar2.rows() << " x " << EVvar2.cols() << std::endl;
 	}
 
+	/**
+	* @brief 计算边缘顶点关系矩阵 EVvar1 和 EVvar2
+	* 
+	* 该函数根据输入的面矩阵 Fs 和边缘到边缘的关系矩阵 E2Edt，计算并生成两个稀疏矩阵 EVvar1 和 EVvar2，
+	* 这些矩阵表示边缘顶点关系。
+	* 
+	* @param Fs 输入的面矩阵，每行包含一个三角形面的三个顶点索引
+	* @param E2Edt 边缘到边缘的关系矩阵，表示边缘之间的连接关系或其他相关信息
+	* @param EVvar1 输出的稀疏矩阵，表示边缘顶点关系的第一部分(边上的第一个一个顶点) 大小为 UV展开后的三角形总边数 * UV展开后的三角形顶点数 第i行第j列表示第i条边与第j个顶点的关系
+	* @param EVvar2 输出的稀疏矩阵，表示边缘顶点关系的第二部分(边上的第一个二个顶点) 大小为 UV展开后的三角形总边数 * UV展开后的三角形顶点数 第i行第j列表示第i条边与第j个顶点的关系
+	*/
 	static void compute_EVvars(const MatX3i& Fs, const Mat& E2Edt, SpMat& EVvar1, SpMat& EVvar2)
 	{
+		// 创建一个大小为 (Fs.rows(), 6) 的矩阵 El
+		// Create a matrix El of size (Fs.rows(), 6)
 		Mati El(Fs.rows(), 6);
 		El << Fs.col(0), Fs.col(1), Fs.col(2), Fs.col(0), Fs.col(1), Fs.col(2);
+	
+		// 转置矩阵 El
+		// Transpose the matrix El
 		Mati Elt = El.transpose();
+	
+		// 将转置后的矩阵 Elt 映射为一个 2 列的矩阵 Elf
+		// Map the transposed matrix Elt to a 2-column matrix Elf
 		MatX2i Elf = Eigen::Map<Mat2Xi>(Elt.data(), 2, Elt.cols() * Elt.rows() / 2.0).transpose();
-
+	
+		// 定义稀疏矩阵 K_V2E
+		// Define a sparse matrix K_V2E
 		SpMati K_V2E;
+	
+		// 定义一些向量
+		// Define some vectors
 		Veci lin_twin(6 * nfs), E_twin(6 * nfs), S_twin(6 * nfs);
-
+	
+		// 生成从 0 到 3 * nfs - 1 的线性间隔向量
+		// Generate a linearly spaced vector from 0 to 3 * nfs - 1
 		Veci lin = Eigen::VectorXi::LinSpaced(3 * nfs, 0, 3 * nfs - 1);
 		lin_twin << lin, lin;
 		E_twin << Elf.col(0), Elf.col(1);
 		S_twin << Eigen::VectorXi::Ones(3 * nfs), -Eigen::VectorXi::Ones(3 * nfs);
-
+	
+		// 使用 igl::sparse 函数生成稀疏矩阵 K_V2E
+		// Generate the sparse matrix K_V2E using the igl::sparse function
 		igl::sparse(lin_twin, E_twin, S_twin, 3 * nfs, nvs, K_V2E);
-
+	
+		// 计算 E2Edt 矩阵的每一列的和，并将和为 0 的列索引存储在 safe_cols 向量中
+		// Compute the sum of each column of the E2Edt matrix and store the indices of columns with sum 0 in the safe_cols vector
 		int s;
 		vector<int> safe_cols;
 		for (int i = 0; i < E2Edt.cols(); ++i) {
@@ -105,29 +141,44 @@ public:
 			}
 			if (s == 0) { safe_cols.push_back(i); }
 		}
-
+	
+		// 创建一个大小为 (E2Edt.rows(), safe_cols.size()) 的矩阵 E2Ec
+		// Create a matrix E2Ec of size (E2Edt.rows(), safe_cols.size())
 		Mat E2Ec = Mat(E2Edt.rows(), safe_cols.size());
 		for (int i = 0; i < safe_cols.size(); ++i) {
 			E2Ec.col(i) = E2Edt.col(safe_cols[i]);
 		}
+	
+		// 转置矩阵 E2Ec
+		// Transpose the matrix E2Ec
 		Mat E2Ect = E2Ec.transpose();
-
+	
+		// 将 E2Ect 转换为稀疏矩阵
+		// Convert E2Ect to a sparse matrix
 		SpMat E2Ecs = E2Ect.sparseView();
-
+	
+		// 计算 K_V2Er 和 K_V2Es 矩阵
+		// Compute the K_V2Er and K_V2Es matrices
 		SpMat K_V2Er = K_V2E.cast<double>() * E2Ect.colwise().sum().asDiagonal();
 		SpMat K_V2Es = K_V2Er;
 		SpMat K_V2Ed = -K_V2Er;
-
+	
+		// 将 K_V2Es 和 K_V2Ed 中的负值设为 0
+		// Set negative values in K_V2Es and K_V2Ed to 0
 		K_V2Es = K_V2Es.unaryExpr([](double v) {
 			return  v < 0 ? 0 : v;
 		});
 		K_V2Ed = K_V2Ed.unaryExpr([](double v) {
 			return v < 0 ? 0 : v;
 		});
-
+	
+		// 修剪 K_V2Es 和 K_V2Ed 中小于 0.01 的值
+		// Prune values in K_V2Es and K_V2Ed less than 0.01
 		K_V2Es.prune(0.01);
 		K_V2Ed.prune(0.01);
-
+	
+		// 计算 EVvar1 和 EVvar2 矩阵
+		// Compute the EVvar1 and EVvar2 matrices
 		EVvar1 = E2Ecs * K_V2Es.transpose();
 		EVvar2 = E2Ecs * K_V2Ed.transpose();
 	}
