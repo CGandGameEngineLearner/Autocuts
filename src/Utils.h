@@ -149,14 +149,34 @@ public:
 		ne = E.rows();
 	}
 
+	// 这段代码的功能是生成一个与输入网格相似的 3D 网格。它通过对输入的顶点矩阵 V 和面矩阵 F 进行处理，
+	// 生成新的顶点矩阵 Vs 和面矩阵 Fs，使得新的网格在拓扑结构上与输入网格相似。
 	static void generate_soup_3d_similar(const MatX3& V, const MatX3i& F, MatX3& Vs, MatX3i& Fs)
 	{
+		// 生成从 0 到 3 * nf - 1 的线性间隔向量
+		// Generate a linearly spaced vector from 0 to 3 * nf - 1
 		Veci lin = Eigen::VectorXi::LinSpaced(3 * nf, 0, 3 * nf - 1);
+	
+		// 转置面矩阵 F
+		// Transpose the face matrix F
 		Mat3Xi Ft = F.transpose();
+	
+		// 将转置后的面矩阵数据映射为一个向量
+		// Map the transposed face matrix data to a vector
 		Veci Fv = Eigen::Map<Veci>(Ft.data(), 3 * nf, 1);
+	
+		// 从顶点矩阵 V 中提取与 Fv 对应的行，生成新的顶点矩阵 Vs
+		// Extract rows from vertex matrix V corresponding to Fv to generate new vertex matrix Vs
 		igl::slice(V, Fv, 1, Vs);
+	
+		// 将 lin 数据映射为一个 3 行的矩阵，并转置生成新的面矩阵 Fs
+		// Map lin data to a 3-row matrix and transpose to generate new face matrix Fs
 		Fs = Eigen::Map<Mat3Xi>(lin.data(), 3, nf).transpose();
-		nvs = Vs.rows(); nfs = Fs.rows();
+	
+		// 获取新的顶点和面的数量
+		// Get the number of new vertices and faces
+		nvs = Vs.rows();
+		nfs = Fs.rows();
 	}
 
 	static void generate_soup_2d_random(const MatX3& V, const MatX3i& F, MatX2& Vs, MatX3i& Fs)
