@@ -49,51 +49,80 @@ void Separation::init(int n)
 
 void Separation::value(const MatX2& X, double& f)
 {
-	EsepP = Esep * X;
-	EsepP_squared_rowwise_sum = EsepP.array().pow(2.0).rowwise().sum();
-	EsepP_squared_rowwise_sum_plus_delta = EsepP_squared_rowwise_sum.array() + delta;
-	switch (sepEType)
-	{
-		case SeparationEnergy::LOG:			
-			//f = (EsepP_squared_rowwise_sum_plus_delta.array().log() * Lsep).sum();
-			f_per_pair = (EsepP_squared_rowwise_sum_plus_delta.array().log() * Lsep);
-			break;
-		case SeparationEnergy::QUADRATIC:
-			//f = EsepP_squared_rowwise_sum.sum();
-			f_per_pair = EsepP_squared_rowwise_sum;
-			break;
-		case SeparationEnergy::FLAT_LOG:
-		{ // Verified: f = sum over Lsep * log((||xi-xj||^2 / (||xi-xj||^2 + delta)) + 1) (1 xi-xj pair per col (1 & -1) in Esept
-			// Store per-pair value for finding the maximal value in current setup
-			f_per_pair = Lsep * (EsepP_squared_rowwise_sum.cwiseQuotient(EsepP_squared_rowwise_sum_plus_delta).array() + 1.0).log();
-			break;
-		}
-		case SeparationEnergy::QUOTIENT:
-		case SeparationEnergy::QUOTIENT_NEW:
-			f_per_pair = EsepP_squared_rowwise_sum.cwiseQuotient(EsepP_squared_rowwise_sum_plus_delta);
-			break;
-		default:
-			assert(false && "Unimplemented separation energy");
-	}
-	// store values before taking painting into account
-	f_sep_per_pair = f_per_pair;
+    // 计算 EsepP = Esep * X
+    // Compute EsepP = Esep * X
+    EsepP = Esep * X;
 
-	// add attraction force from painting
-	// alpha * ||xi - xj||^2
-	f_per_pair += (connect_alphas + no_seam_constraints_per_pair).cwiseProduct(EsepP_squared_rowwise_sum);
+    // 计算每行的平方和
+    // Compute the squared sum of each row
+    EsepP_squared_rowwise_sum = EsepP.array().pow(2.0).rowwise().sum();
 
-	// apply distraction force from painting
-	// f -> alpha * f
-	f_per_pair = f_per_pair.cwiseProduct(disconnect_alphas);
+    // 加上 delta
+    // Add delta
+    EsepP_squared_rowwise_sum_plus_delta = EsepP_squared_rowwise_sum.array() + delta;
 
-	// add edge length factor
-	f_per_pair = f_per_pair.cwiseProduct(edge_lenghts_per_pair);
+    // 根据分离能量类型选择不同的计算方法
+    // Choose different calculation methods based on the separation energy type
+    switch (sepEType)
+    {
+        case SeparationEnergy::LOG:
+            // 计算 LOG 类型的分离能量
+            // Compute LOG type separation energy
+            // f = (EsepP_squared_rowwise_sum_plus_delta.array().log() * Lsep).sum();
+            f_per_pair = (EsepP_squared_rowwise_sum_plus_delta.array().log() * Lsep);
+            break;
+        case SeparationEnergy::QUADRATIC:
+            // 计算 QUADRATIC 类型的分离能量
+            // Compute QUADRATIC type separation energy
+            // f = EsepP_squared_rowwise_sum.sum();
+            f_per_pair = EsepP_squared_rowwise_sum;
+            break;
+        case SeparationEnergy::FLAT_LOG:
+        {
+            // 计算 FLAT_LOG 类型的分离能量
+            // Compute FLAT_LOG type separation energy
+            // Verified: f = sum over Lsep * log((||xi-xj||^2 / (||xi-xj||^2 + delta)) + 1) (1 xi-xj pair per col (1 & -1) in Esept
+            // Store per-pair value for finding the maximal value in current setup
+            f_per_pair = Lsep * (EsepP_squared_rowwise_sum.cwiseQuotient(EsepP_squared_rowwise_sum_plus_delta).array() + 1.0).log();
+            break;
+        }
+        case SeparationEnergy::QUOTIENT:
+        case SeparationEnergy::QUOTIENT_NEW:
+            // 计算 QUOTIENT 和 QUOTIENT_NEW 类型的分离能量
+            // Compute QUOTIENT and QUOTIENT_NEW type separation energy
+            f_per_pair = EsepP_squared_rowwise_sum.cwiseQuotient(EsepP_squared_rowwise_sum_plus_delta);
+            break;
+        default:
+            // 未实现的分离能量类型
+            // Unimplemented separation energy type
+            assert(false && "Unimplemented separation energy");
+    }
 
-	// if a pair shall not be a seam, it should have a high value
-	//f_per_pair = f_per_pair.cwiseProduct(no_seam_constraints_per_pair);
+    // 在考虑绘画之前存储值
+    // Store values before taking painting into account
+    f_sep_per_pair = f_per_pair;
 
-	// sum everything up
-	f = f_per_pair.sum();
+    // 添加绘画的吸引力
+    // Add attraction force from painting
+    // alpha * ||xi - xj||^2
+    f_per_pair += (connect_alphas + no_seam_constraints_per_pair).cwiseProduct(EsepP_squared_rowwise_sum);
+
+    // 应用绘画的排斥力
+    // Apply distraction force from painting
+    // f -> alpha * f
+    f_per_pair = f_per_pair.cwiseProduct(disconnect_alphas);
+
+    // 添加边长因子
+    // Add edge length factor
+    f_per_pair = f_per_pair.cwiseProduct(edge_lenghts_per_pair);
+
+    // 如果一对不应成为接缝，它应该有一个高值
+    // If a pair shall not be a seam, it should have a high value
+    // f_per_pair = f_per_pair.cwiseProduct(no_seam_constraints_per_pair);
+
+    // 将所有值求和
+    // Sum everything up
+    f = f_per_pair.sum();
 }
 
 void Separation::gradient(const MatX2& X, Vec& g)
@@ -222,6 +251,7 @@ void Separation::find_single_hessian(const Vec2& xi, const Vec2& xj, Mat4& h)
     double t = 0.5 * dx.squaredNorm();
 
     // 定义变量以存储一阶和二阶导数
+	// fp为 $\hat{s}(t) = \frac{t}{t + \delta}.$ 对于t的偏导
     double fp, fpp;
 
     // 根据分离能量类型选择不同的计算方法
@@ -433,26 +463,42 @@ void Separation::make_spd(Mat4& h)
 
 void Separation::add_to_global_hessian(const Mat4& sh, int idx_xi, int idx_xj, int n, list<Tripletd>& htriplets)
 {
-	// do column by column of single-face hessian sh
-	htriplets.push_back(Tripletd(idx_xi,			idx_xi,			sh(0, 0)));
-	htriplets.push_back(Tripletd(idx_xi + n,	idx_xi,			sh(1, 0)));
-	htriplets.push_back(Tripletd(idx_xj,			idx_xi,			sh(2, 0)));
-	htriplets.push_back(Tripletd(idx_xj + n,	idx_xi,			sh(3, 0)));
+    // 按列处理单个面的 Hessian 矩阵 sh
+    // Do column by column of single-face hessian sh
+	// | idx_xi     idx_xi+n   idx_xj     idx_xj+n   |
+	// |---------------------------------------------|
+	// | sh(0,0)    sh(0,1)    sh(0,2)    sh(0,3)    |
+	// | sh(1,0)    sh(1,1)    sh(1,2)    sh(1,3)    |
+	// | sh(2,0)    sh(2,1)    sh(2,2)    sh(2,3)    |
+	// | sh(3,0)    sh(3,1)    sh(3,2)    sh(3,3)    |
 
-	htriplets.push_back(Tripletd(idx_xi,			idx_xi + n, sh(0, 1)));
-	htriplets.push_back(Tripletd(idx_xi + n,	idx_xi + n, sh(1, 1)));
-	htriplets.push_back(Tripletd(idx_xj,			idx_xi + n, sh(2, 1)));
-	htriplets.push_back(Tripletd(idx_xj + n,	idx_xi + n, sh(3, 1)));
+    // 第一列
+    // First column
+    htriplets.push_back(Tripletd(idx_xi,            idx_xi,            sh(0, 0)));
+    htriplets.push_back(Tripletd(idx_xi + n,        idx_xi,            sh(1, 0)));
+    htriplets.push_back(Tripletd(idx_xj,            idx_xi,            sh(2, 0)));
+    htriplets.push_back(Tripletd(idx_xj + n,        idx_xi,            sh(3, 0)));
 
-	htriplets.push_back(Tripletd(idx_xi,			idx_xj,			sh(0, 2)));
-	htriplets.push_back(Tripletd(idx_xi + n,	idx_xj,			sh(1, 2)));
-	htriplets.push_back(Tripletd(idx_xj,			idx_xj,			sh(2, 2)));
-	htriplets.push_back(Tripletd(idx_xj + n,	idx_xj,			sh(3, 2)));
+    // 第二列
+    // Second column
+    htriplets.push_back(Tripletd(idx_xi,            idx_xi + n,        sh(0, 1)));
+    htriplets.push_back(Tripletd(idx_xi + n,        idx_xi + n,        sh(1, 1)));
+    htriplets.push_back(Tripletd(idx_xj,            idx_xi + n,        sh(2, 1)));
+    htriplets.push_back(Tripletd(idx_xj + n,        idx_xi + n,        sh(3, 1)));
 
-	htriplets.push_back(Tripletd(idx_xi,			idx_xj + n, sh(0, 3)));
-	htriplets.push_back(Tripletd(idx_xi + n,	idx_xj + n, sh(1, 3)));
-	htriplets.push_back(Tripletd(idx_xj,			idx_xj + n, sh(2, 3)));
-	htriplets.push_back(Tripletd(idx_xj + n,	idx_xj + n, sh(3, 3)));
+    // 第三列
+    // Third column
+    htriplets.push_back(Tripletd(idx_xi,            idx_xj,            sh(0, 2)));
+    htriplets.push_back(Tripletd(idx_xi + n,        idx_xj,            sh(1, 2)));
+    htriplets.push_back(Tripletd(idx_xj,            idx_xj,            sh(2, 2)));
+    htriplets.push_back(Tripletd(idx_xj + n,        idx_xj,            sh(3, 2)));
+
+    // 第四列
+    // Fourth column
+    htriplets.push_back(Tripletd(idx_xi,            idx_xj + n,        sh(0, 3)));
+    htriplets.push_back(Tripletd(idx_xi + n,        idx_xj + n,        sh(1, 3)));
+    htriplets.push_back(Tripletd(idx_xj,            idx_xj + n,        sh(2, 3)));
+    htriplets.push_back(Tripletd(idx_xj + n,        idx_xj + n,        sh(3, 3)));
 }
 
 void Separation::update_alphas(const Mat& weights, double max_possible)
