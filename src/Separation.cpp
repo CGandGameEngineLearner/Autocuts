@@ -109,6 +109,9 @@ void Separation::value(const MatX2& X, double& f)
         case SeparationEnergy::QUOTIENT_NEW:
             // 计算 QUOTIENT 和 QUOTIENT_NEW 类型的分离能量
             // Compute QUOTIENT and QUOTIENT_NEW type separation energy
+            // 在这段代码中，进行的是逐元素（按元素）除法运算。
+            // 具体来说，它计算了 EsepP_squared_rowwise_sum 和 EsepP_squared_rowwise_sum_plus_delta 之间的逐元素商，
+            // 并将结果存储在 f_per_pair 中
             f_per_pair = EsepP_squared_rowwise_sum.cwiseQuotient(EsepP_squared_rowwise_sum_plus_delta);
             break;
         default:
@@ -131,6 +134,8 @@ void Separation::value(const MatX2& X, double& f)
     // f -> alpha * f
     f_per_pair = f_per_pair.cwiseProduct(disconnect_alphas);
 
+    // 打印edge_lenghts_per_pair的形状
+    std::cout << "edge_lenghts_per_pair shape: " << edge_lenghts_per_pair.rows() << " * " << edge_lenghts_per_pair.cols() << std::endl;
     // 添加边长因子
     // Add edge length factor
     f_per_pair = f_per_pair.cwiseProduct(edge_lenghts_per_pair);
@@ -207,20 +212,21 @@ void Separation::hessian(const MatX2& X)
         Mat4 sh;
         int idx_xi, idx_xj, factor;
 
-        //得到稀疏矩阵 Esept 的第 i 列的迭代器
+        // 得到稀疏矩阵 Esept 的第 i 列的迭代器
         SpMat::InnerIterator it(Esept, i);
 
-        //得到稀疏矩阵 Esept 的第 i 列的第一个非零元素的行索引
+        // 得到稀疏矩阵 Esept 的第 i 列的第一个非零元素的行索引
         idx_xi = it.row();
-        //得到稀疏矩阵 Esept 的第 i 列的第一个非零元素的值
+        // 得到稀疏矩阵 Esept 的第 i 列的第一个非零元素的值 由于这是个关系矩阵 
+        // 要么值为0表示不相连 要么值为1表示相连 取非零元素的话这个值肯定恒为1
         factor = it.value();
-        cout<<"Esept "<<i <<" column factor = "<<factor<<endl;
+        //cout<<"Esept "<<i <<" column factor = "<<factor<<endl;
 
         idx_xj = (++it).row();
         xi = X.row(idx_xi);
         xj = X.row(idx_xj);
         find_single_hessian(xi, xj, sh);
-        sh *= factor;
+        //sh *= factor; // 原作者留下的坑，不考虑 factor 也能正常运行，因为 factor 恒为 1
 
         // 添加额外的因子，如着色和边缘分裂/合并
         // Add the additional factors like coloring and edge splitting/merging
