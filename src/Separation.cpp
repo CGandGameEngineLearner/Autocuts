@@ -179,9 +179,20 @@ void Separation::gradient(const MatX2& X, Vec& g)
 	g = Eigen::Map<Vec>(ge.data(), 2.0 * ge.rows(), 1);
 }
 
+/**
+ * @brief 计算分离能量的 Hessian 矩阵
+ * 
+ * 该函数根据输入的顶点位置矩阵 X，计算分离能量的 Hessian 矩阵。
+ * 
+ * @param X 输入的顶点位置矩阵，大小为 n x 2，其中 n 是展开的UV图上的三角形汤的顶点的数量，每行表示一个顶点的二维坐标。
+ */
 void Separation::hessian(const MatX2& X)
 {
     int n = X.rows();
+    //cout<<"Separation::hessian X.rows() = "<<n<<endl;
+
+    //std::cout << "Esept Matrix shape: " << Esept.rows() << " * " << Esept.cols() << std::endl;
+
     int threads = omp_get_max_threads();
 
 	// 使用 OpenMP 并行计算 Hessian 矩阵 按列并行计算
@@ -189,15 +200,22 @@ void Separation::hessian(const MatX2& X)
     for (int i = 0; i < Esept.outerSize(); ++i)
     { 
 		
-        // 没有内部循环，因为每列只有2个非零值
+        // 没有内部循环，因为每列只有2个非零值,因为一条边上有两个顶点
         // No inner loop because there are only 2 non-zero values per column
         int tid = omp_get_thread_num();
         Vec2 xi, xj;
         Mat4 sh;
         int idx_xi, idx_xj, factor;
+
+        //得到稀疏矩阵 Esept 的第 i 列的迭代器
         SpMat::InnerIterator it(Esept, i);
+
+        //得到稀疏矩阵 Esept 的第 i 列的第一个非零元素的行索引
         idx_xi = it.row();
+        //得到稀疏矩阵 Esept 的第 i 列的第一个非零元素的值
         factor = it.value();
+        cout<<"Esept "<<i <<" column factor = "<<factor<<endl;
+
         idx_xj = (++it).row();
         xi = X.row(idx_xi);
         xj = X.row(idx_xj);

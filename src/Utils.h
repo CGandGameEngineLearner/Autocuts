@@ -69,8 +69,8 @@ public:
 	
 		// 定义一个中间变量 E2Edt
 		// Define an intermediate variable E2Edt
-		Mat E2Edt;
 	
+		Mat E2Edt;
 		// 计算边到边的稀疏矩阵
 		// Compute the edge-to-edge sparse matrix
 		compute_E2E(V2V, E2Edt);

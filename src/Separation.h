@@ -40,6 +40,8 @@ public:
     void update_alphas(const Mat& weights, double max_possible);
 
     // 稀疏矩阵，用于存储各种变量	
+    // Esep矩阵为一个表示边与顶点连接关系的矩阵，其大小为三角形汤的总边数 * 2 * 三角形汤中的顶点总数，如果Esep[i][j] == 1，则表示第i条边与第j个顶点相连
+    // 由于每条边上有两个顶点，所以Esep的列数是三角形汤中的顶点总数的两倍，并且不包含原网格体上的开放边
     SpMat EVvar1, EVvar2, Esep, Esept, V2V, V2Vt;
     SpMat C2C; // Corner to corner
     MatX2 EsepP;
