@@ -135,7 +135,7 @@ void Separation::value(const MatX2& X, double& f)
     f_per_pair = f_per_pair.cwiseProduct(disconnect_alphas);
 
     // 打印edge_lenghts_per_pair的形状
-    std::cout << "edge_lenghts_per_pair shape: " << edge_lenghts_per_pair.rows() << " * " << edge_lenghts_per_pair.cols() << std::endl;
+    // std::cout << "edge_lenghts_per_pair shape: " << edge_lenghts_per_pair.rows() << " * " << edge_lenghts_per_pair.cols() << std::endl;
     // 添加边长因子
     // Add edge length factor
     f_per_pair = f_per_pair.cwiseProduct(edge_lenghts_per_pair);
@@ -263,6 +263,9 @@ void Separation::prepare_hessian(int n)
 {
 	II.clear();
 	JJ.clear();
+
+    // II 矩阵存储 Hessian 矩阵的行索引
+    // JJ 矩阵存储 Hessian 矩阵的列索引
 	auto PushPair = [&](int i, int j) { II.push_back(i); JJ.push_back(j); };
 	for (int i = 0; i < Esept.outerSize(); ++i)
 	{
