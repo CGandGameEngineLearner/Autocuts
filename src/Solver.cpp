@@ -66,7 +66,7 @@ void Solver::init(const MatX3& V, const MatX3i& F, const MatX3& V_cut, const Mat
 	m_x = Eigen::Map<Vec>(Vs.data(), Vs.rows() * Vs.cols());
 	ext_x = m_x;
 	eval_f = bind(&Energy::evaluate_f, energy, _1, _2);
-	eval_fgh = bind(&Energy::evaluate_fgh, energy, _1, _2, _3, _4);
+	eval_fgh = bind(&Energy::evaluate_fgh, energy, _1, _2, _3);
 	internal_init();
 	num_steps = 2147483647;
 }

@@ -17,7 +17,7 @@ public:
 
 	void init(unsigned int nf, const MatX2& Vs, const MatX3i& Fs, const MatX3& V, const MatX3i& F);
 	void evaluate_f(const Vec& x, double& f);
-	void evaluate_fgh(const Vec& x, double& f, Vec& g, SpMat& h);
+	void evaluate_fgh(const Vec& x, double& f, Vec& g);
 
 	// helper functions
 	inline void map_to_X(const Vec& x);

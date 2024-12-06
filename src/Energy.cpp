@@ -50,7 +50,8 @@ void Energy::evaluate_f(const Vec& x, double& f)
     f = (1.0 - lambda) * fd + lambda * fs + pos_weight * fp + bbox_weight * fb;
 }
 
-void Energy::evaluate_fgh(const Vec& x, double& f, Vec& g, SpMat& h)
+// 计算能量函数的梯度 g 和 Hessian 矩阵 h
+void Energy::evaluate_fgh(const Vec& x, double& f, Vec& g)
 {
     // 将输入向量 x 映射到内部变量 X
     map_to_X(x);

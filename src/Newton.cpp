@@ -7,7 +7,7 @@ Newton::Newton() {}
 
 int Newton::step()
 {
-	eval_fgh(m_x, f, g, h);
+	eval_fgh(m_x, f, g);
 
  	SSd = energy->symDirichlet->SS;
  	mult(SSd, 1. - energy->lambda);
@@ -75,7 +75,7 @@ void Newton::internal_init()
 	}
 #endif
 
-	eval_fgh(m_x, f, g, h);
+	eval_fgh(m_x, f, g);
 
 	IId = energy->symDirichlet->II;
 	JJd = energy->symDirichlet->JJ;

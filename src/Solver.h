@@ -54,7 +54,7 @@ protected:
 
 	// Function pointers to the full and value-only energy evaluation
 	function<void(const Vec&, double&)> eval_f;
-	function<void(const Vec&, double&, Vec&, SpMat&)> eval_fgh;
+	function<void(const Vec&, double&, Vec&)> eval_fgh;
 	
 	// Current energy, gradient and hessian
 	double f;
