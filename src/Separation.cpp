@@ -294,6 +294,7 @@ void Separation::prepare_hessian(int n)
 		PushPair(idx_xi,			idx_xj + n);
 		PushPair(idx_xi + n,	idx_xj + n);
 		PushPair(idx_xj,			idx_xj + n);
+        
 		PushPair(idx_xj + n,	idx_xj + n);
 	}
 	SS = vector<double>(II.size(), 0.);

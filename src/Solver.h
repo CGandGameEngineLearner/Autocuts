@@ -150,6 +150,22 @@ protected:
 
     // pardiso 变量
     // pardiso variables
+    // IId 失真函数海森矩阵的行索引
+    // JJd 失真函数海森矩阵的列索引
+    // SSd 失真函数海森矩阵的值
+    // IIs 分离函数海森矩阵的行索引
+    // JJs 分离函数海森矩阵的列索引
+    // SSs 分离函数海森矩阵的值
+    // IIp 位置函数海森矩阵的行索引
+    // JJp 位置函数海森矩阵的列索引
+    // SSp 位置函数海森矩阵的值
+    // IIb BBox 函数海森矩阵的行索引
+    // JJb BBox 函数海森矩阵的列索引
+    // SSb BBox 函数海森矩阵的值
+    // 总海森矩阵的行索引
+    // II 海森矩阵的行索引
+    // JJ 海森矩阵的列索引
+    // SS 海森矩阵的值
     vector<int> IId, JJd, IIs, JJs, IIp, JJp, IIb, JJb, II, JJ;
     vector<double> SSd, SSs, SSp, SSb, SS;
 

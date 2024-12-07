@@ -46,6 +46,7 @@ int Newton::step()
 	tripletList.reserve(II.size());
 	int rows = *std::max_element(II.begin(), II.end())+1;
 	int cols = *std::max_element(JJ.begin(), JJ.end())+1;
+	cout<<"Global Hession rows = "<<rows<<", cols = "<<cols<<endl;
 	assert(rows == cols && "Rows == Cols at Newton internal init");
 	for(int i=0; i<II.size(); i++)
 		tripletList.push_back(T(II[i],JJ[i],SS[i]));
@@ -53,6 +54,7 @@ int Newton::step()
 	mat.setFromTriplets(tripletList.begin(), tripletList.end());
 	solver.factorize(mat);
 	Vec rhs = -g;
+	std::cout<<"g shape"<<g.rows()<<" "<<g.cols()<<std::endl;
 	p = solver.solve(rhs);
 #endif
 	return 0;
