@@ -90,10 +90,7 @@ private:
 
     // 将矩阵转换为正定矩阵
     void make_spd(Mat4& h);
-
-    // 将单个 Hessian 矩阵添加到全局 Hessian 矩阵中
-    void add_to_global_hessian(const Mat4& sh, int idx_xi, int idx_xj, int n, list<Tripletd>& htriplets);
-
+    
     // 返回值的符号
     inline int sign(double val);
 

@@ -1,4 +1,5 @@
 #include "Energy.h"
+#include <iostream>
 
 Energy::Energy()
 	:
@@ -106,6 +107,13 @@ void Energy::evaluate_fgh(const Vec& x, double& f, Vec& g)
 
     // 计算总能量 f，使用各个能量项的加权和
     f = (1.0 - lambda) * fd + lambda * fs + pos_weight * fp + bbox_weight * fb;
+
+    // 打印矩阵gd gs gp gb的形状
+    std::cout << "gd shape: " << gd.rows() << " " << gd.cols() << std::endl;
+    std::cout << "gs shape: " << gs.rows() << " " << gs.cols() << std::endl;
+    std::cout << "gp shape: " << gp.rows() << " " << gp.cols() << std::endl;
+    std::cout << "gb shape: " << gb.rows() << " " << gb.cols() << std::endl;
+
 
     // 计算总梯度 g，使用各个能量项的梯度的加权和
     g = (1.0 - lambda) * gd + lambda * gs + pos_weight * gp + bbox_weight * gb;

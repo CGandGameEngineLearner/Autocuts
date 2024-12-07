@@ -124,6 +124,10 @@ void Separation::value(const MatX2& X, double& f)
     // Store values before taking painting into account
     f_sep_per_pair = f_per_pair;
 
+    std::cout << "Size of connect_alphas: " << connect_alphas.rows() << " x " << connect_alphas.cols() << std::endl;
+    std::cout << "Size of no_seam_constraints_per_pair: " << no_seam_constraints_per_pair.rows() << " x " << no_seam_constraints_per_pair.cols() << std::endl;
+    std::cout << "Size of EsepP_squared_rowwise_sum: " << EsepP_squared_rowwise_sum.rows() << " x " << EsepP_squared_rowwise_sum.cols() << std::endl;
+
     // 添加绘画的吸引力
     // Add attraction force from painting
     // alpha * ||xi - xj||^2
@@ -522,45 +526,6 @@ void Separation::make_spd(Mat4& h)
 		h -= Mat4::Identity()*(min_ev - 1e-6);
 }
 
-void Separation::add_to_global_hessian(const Mat4& sh, int idx_xi, int idx_xj, int n, list<Tripletd>& htriplets)
-{
-    // 按列处理单个面的 Hessian 矩阵 sh
-    // Do column by column of single-face hessian sh
-	// | idx_xi     idx_xi+n   idx_xj     idx_xj+n   |
-	// |---------------------------------------------|
-	// | sh(0,0)    sh(0,1)    sh(0,2)    sh(0,3)    |
-	// | sh(1,0)    sh(1,1)    sh(1,2)    sh(1,3)    |
-	// | sh(2,0)    sh(2,1)    sh(2,2)    sh(2,3)    |
-	// | sh(3,0)    sh(3,1)    sh(3,2)    sh(3,3)    |
-
-    // 第一列
-    // First column
-    htriplets.push_back(Tripletd(idx_xi,            idx_xi,            sh(0, 0)));
-    htriplets.push_back(Tripletd(idx_xi + n,        idx_xi,            sh(1, 0)));
-    htriplets.push_back(Tripletd(idx_xj,            idx_xi,            sh(2, 0)));
-    htriplets.push_back(Tripletd(idx_xj + n,        idx_xi,            sh(3, 0)));
-
-    // 第二列
-    // Second column
-    htriplets.push_back(Tripletd(idx_xi,            idx_xi + n,        sh(0, 1)));
-    htriplets.push_back(Tripletd(idx_xi + n,        idx_xi + n,        sh(1, 1)));
-    htriplets.push_back(Tripletd(idx_xj,            idx_xi + n,        sh(2, 1)));
-    htriplets.push_back(Tripletd(idx_xj + n,        idx_xi + n,        sh(3, 1)));
-
-    // 第三列
-    // Third column
-    htriplets.push_back(Tripletd(idx_xi,            idx_xj,            sh(0, 2)));
-    htriplets.push_back(Tripletd(idx_xi + n,        idx_xj,            sh(1, 2)));
-    htriplets.push_back(Tripletd(idx_xj,            idx_xj,            sh(2, 2)));
-    htriplets.push_back(Tripletd(idx_xj + n,        idx_xj,            sh(3, 2)));
-
-    // 第四列
-    // Fourth column
-    htriplets.push_back(Tripletd(idx_xi,            idx_xj + n,        sh(0, 3)));
-    htriplets.push_back(Tripletd(idx_xi + n,        idx_xj + n,        sh(1, 3)));
-    htriplets.push_back(Tripletd(idx_xj,            idx_xj + n,        sh(2, 3)));
-    htriplets.push_back(Tripletd(idx_xj + n,        idx_xj + n,        sh(3, 3)));
-}
 
 void Separation::update_alphas(const Mat& weights, double max_possible)
 {
