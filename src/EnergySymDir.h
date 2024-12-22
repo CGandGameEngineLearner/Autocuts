@@ -47,14 +47,31 @@ public:
 	Eigen::SparseMatrix<double> DdetJuv_DUV; //jacobian of the function (detJuv) by UV
 
 	//singular values
-	Eigen::MatrixX2d s; //Singular values s[0]>s[1]
-	Eigen::MatrixX4d v; //Singular vectors 
-	Eigen::MatrixX4d u; //Singular vectors 
-	Eigen::MatrixXd Dsd[2]; //singular values dense derivatives s[0]>s[1] 奇异值的稠密导数，s[0] > s[1] 保存了奇异值关于 UV 的偏导数
+	Eigen::MatrixX2d s; //Singular values s[0]>s[1]  shape: number of faces * 2
+	Eigen::MatrixX4d v; //Singular vectors shape: number of faces * 4   每行是把2*2的局部V矩阵展开的
+	Eigen::MatrixX4d u; //Singular vectors
+
+	//singular values dense derivatives s[0]>s[1] 奇异值的稠密导数，s[0] > s[1] 保存了奇异值关于 UV 的偏导数
+	//两个矩阵的形状都为 6*面片数量 每一列为一个面片的导数
+	//Dsd[0] 保存了 s[0] 的导数，Dsd[1] 保存了 s[1] 的导数
+	//相当于两个奇异值关于 UV 的偏导数
+	Eigen::MatrixXd Dsd[2];
 
 	//SVD methods
+	// J shape : 2 *2
+	// 局部J矩阵为:
+	// [  a , b
+	//    c ,  d  ]
 	bool updateJ(const MatX2& X);
+
+	// 对J矩阵进行SVD分解
 	void UpdateSSVDFunction();
+
+	/**
+	 * @brief 计算稠密奇异值分解（SVD）导数
+	 *
+	 * 该函数计算每个面在两个局部坐标方向上的导数信息，并将结果存储在 Dsd 矩阵中。
+	 */
 	void ComputeDenseSSVDDerivatives();
 
 

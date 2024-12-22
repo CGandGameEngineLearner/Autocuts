@@ -144,6 +144,8 @@ void DistortionSymDir::hessian(const MatX2& X)
 		Vector6d a2i = a2d.col(i);
 		Vector6d b1i = b1d.col(i);
 		Vector6d b2i = b2d.col(i);
+
+		//
 		Hi[i] = Area(i)*ComputeConvexConcaveFaceHessian(
 			a1i, a2i, b1i, b2i,
 			aY(i), bY(i), cY(i), dY(i),
@@ -172,6 +174,7 @@ void DistortionSymDir::hessian(const MatX2& X)
 	}
 }
 
+
 bool DistortionSymDir::
 updateJ(const MatX2& X)
 {
@@ -199,29 +202,32 @@ updateJ(const MatX2& X)
 };
 void DistortionSymDir::UpdateSSVDFunction()
 {
-
+	cout <<"DistortionSymDir::UpdateSSVDFunction a.size() = " << a.size() << endl;
 #pragma omp parallel for num_threads(24)
 	for (int i = 0; i < a.size(); i++)
 	{
 		Eigen::Matrix2d A;
 		Matrix2d U, S, V;
 		A << a[i], b[i], c[i], d[i];
+		//std::cout<< "Distortion J shape: "<< A.rows() << " " << A.cols() << std::endl;
 		Utils::SSVD2x2(A, U, S, V);
 		u.row(i) << U(0), U(1), U(2), U(3);
 		v.row(i) << V(0), V(1), V(2), V(3);
+		
 		s.row(i) << S(0), S(3);
+
+		//cout << "Distortion singular values:" << endl;
+		//cout<<s<<endl;
 	}
 }
 
-/**
- * @brief 计算稠密奇异值分解（SVD）导数
- * 
- * 该函数计算每个面在两个局部坐标方向上的导数信息，并将结果存储在 Dsd 矩阵中。
- */
+
 void DistortionSymDir::ComputeDenseSSVDDerivatives()
 {
     // 不同的列属于不同的面
     // 计算矩阵 B 和 C，它们是通过将 D1d 和 D2d 矩阵与 v 矩阵的对角矩阵相乘得到的
+	// B = D1d * diag(V)
+	// C = D1d * diag(V)
     Eigen::MatrixXd B(D1d * v.col(0).asDiagonal() + D2d * v.col(1).asDiagonal());
     Eigen::MatrixXd C(D1d * v.col(2).asDiagonal() + D2d * v.col(3).asDiagonal());
 

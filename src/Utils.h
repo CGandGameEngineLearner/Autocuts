@@ -476,13 +476,19 @@ public:
 	static void computeSurfaceGradientPerFace(const Eigen::MatrixX3d &V, const Eigen::MatrixX3i &F, Eigen::MatrixX3d &D1, Eigen::MatrixX3d &D2)
 	{
 		using namespace Eigen;
-		MatrixX3d F1, F2, F3;
+		MatrixX3d F1, F2, F3; // 形状都为顶点数 * 3
+
+		// 据顶点坐标 V 和面索引 F，为每个面取两个边归一化后分得到两个切向量 (F1、F2) 和一个法向量 (F3)
 		igl::local_basis(V, F, F1, F2, F3);
 		const int Fn = F.rows();  const int vn = V.rows(); // Fn: number of faces, vn: number of vertices
 
+		// 形状都为三角形面数 x 3 的矩阵，用于存储每个面的表面梯度
+		// Dx、Dy、Dz 分别表示每个面的3个顶点在 x、y、z 方向上的梯度
 		MatrixXd Dx(Fn, 3), Dy(Fn, 3), Dz(Fn, 3);
 		MatrixXd fN; igl::per_face_normals(V, F, fN); // 计算每个面的法向量
 		VectorXd Ar; igl::doublearea(V, F, Ar); // 计算每个面的双倍面积
+
+		//cout << "Dx shape :" << Dx.rows() << " " << Dx.cols() << endl;
 		
 
 		Vec3i Pi;
@@ -498,10 +504,12 @@ public:
 			int i3 = F(i, 2);
 
 			// #F x 3 matrices of triangle edge vectors, named after opposite vertices
+			// e 3 * 3:
+			// [ ( P2 - P1),(P3 - P2), (P1 - P3) ] 
 			Matrix3d e;
-			e.col(0) = V.row(i2) - V.row(i1);
-			e.col(1) = V.row(i3) - V.row(i2);
-			e.col(2) = V.row(i1) - V.row(i3);;
+			e.col(0) = V.row(i2) - V.row(i1); // P2 - P1
+			e.col(1) = V.row(i3) - V.row(i2); // P3 - P2
+			e.col(2) = V.row(i1) - V.row(i3);;// P1 - P3
 
 			Vector3d Fni = fN.row(i); // 得出这个面的法向量
 			double Ari = Ar(i);  // 得出这个面的面积的两倍
@@ -510,21 +518,29 @@ public:
 
 			// n_M = 
 			// [0, -Fni(2), Fni(1);
-			// Fni(2), 0, -Fni(1);
+			// Fni(2), 0, -Fni(0);
 			// -Fni(1), Fni(0), 0]
 			// 矩阵是一个 3x3 的反对称矩阵，用于表示法向量 Fni 的叉乘矩阵。这个矩阵用于将法向量的叉乘操作转换为矩阵乘法，从而简化与法向量的叉乘操作。
 			Matrix3d n_M;
 			n_M << 0, -Fni(2), Fni(1), Fni(2), 0, -Fni(0), -Fni(1), Fni(0), 0;
 
-			VectorXi R(3); R << 0, 1, 2;
-			VectorXi C(3); C << 3 * i + 2, 3 * i, 3 * i + 1;
+			//VectorXi R(3); R << 0, 1, 2;
+			//VectorXi C(3); C << 3 * i + 2, 3 * i, 3 * i + 1;
+
+			// n_M * e 本质上就是 法向量 叉乘 e矩阵中的每一列向量，得到一个列向量组成的矩阵
+			// 乘以P后被重排
+			// [ F_ni x e1, F_ni x e2, F_ni x e0] 对应 p1 p2 p3
 			Matrix3d res = ((1. / Ari)*(n_M*e))*P; // $ res = \left(\frac{1}{Ari} \cdot (n_M \cdot e)\right) \cdot P $
+
+
 
 			Dx.row(i) = res.row(0);
 			Dy.row(i) = res.row(1);
 			Dz.row(i) = res.row(2);
 			//		igl::slice_into(res, R, C, grad3_3f);
 		}
+
+		//  [F1_x * Dx ,F1_y*Dy,F1_z*Dz] 
 		D1 = F1.col(0).asDiagonal()*Dx + F1.col(1).asDiagonal()*Dy + F1.col(2).asDiagonal()*Dz;
 		D2 = F2.col(0).asDiagonal()*Dx + F2.col(1).asDiagonal()*Dy + F2.col(2).asDiagonal()*Dz;
 	}
