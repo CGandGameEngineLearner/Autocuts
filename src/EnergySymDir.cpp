@@ -110,7 +110,7 @@ void DistortionSymDir::gradient(const MatX2& X, Vec& g)
 		}
 		Vector6d Dsdi0 = Dsd[0].col(fi);
 		Vector6d Dsdi1 = Dsd[1].col(fi);
-		Vector6d gi = Area(fi)*(Dsdi0*gS + Ds di1*gs);
+		Vector6d gi = Area(fi)*(Dsdi0*gS + Dsdi1*gs);
 		for (int vi = 0; vi < 6; ++vi) {
 			g(Fuv(vi, fi)) += gi(vi);
 		}
