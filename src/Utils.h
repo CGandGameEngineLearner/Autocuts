@@ -463,22 +463,34 @@ public:
 		A = sqrt(S.array() * SL1.array() * SL2.array() * SL3.array());
 	}
 
+	/**
+	* @brief 计算每个面的表面梯度
+	* 
+	* 该函数计算每个三角形面的表面梯度，并将结果存储在矩阵 D1 和 D2 中。
+	* 计算的是每个三角形面在局部坐标系中的两个基向量方向上的梯度。这两个基向量通常是面所在平面的两个局部基向量，通常称为 u 和 v 方向。
+	* @param V 顶点位置矩阵，大小为 #V x 3
+	* @param F 面索引矩阵，大小为 #F x 3
+	* @param D1 输出的第一个方向的梯度矩阵，大小为 #F x 3
+	* @param D2 输出的第二个方向的梯度矩阵，大小为 #F x 3
+	*/
 	static void computeSurfaceGradientPerFace(const Eigen::MatrixX3d &V, const Eigen::MatrixX3i &F, Eigen::MatrixX3d &D1, Eigen::MatrixX3d &D2)
 	{
 		using namespace Eigen;
 		MatrixX3d F1, F2, F3;
 		igl::local_basis(V, F, F1, F2, F3);
-		const int Fn = F.rows();  const int vn = V.rows();
+		const int Fn = F.rows();  const int vn = V.rows(); // Fn: number of faces, vn: number of vertices
 
 		MatrixXd Dx(Fn, 3), Dy(Fn, 3), Dz(Fn, 3);
-		MatrixXd fN; igl::per_face_normals(V, F, fN);
-		VectorXd Ar; igl::doublearea(V, F, Ar);
-		PermutationMatrix<3> perm;
+		MatrixXd fN; igl::per_face_normals(V, F, fN); // 计算每个面的法向量
+		VectorXd Ar; igl::doublearea(V, F, Ar); // 计算每个面的双倍面积
+		
 
 		Vec3i Pi;
 		Pi << 1, 2, 0;
 		PermutationMatrix<3> P = Eigen::PermutationMatrix<3>(Pi);
 
+
+		// 遍历每个面
 		for (int i = 0; i < Fn; i++) {
 			// renaming indices of vertices of triangles for convenience
 			int i1 = F(i, 0);
@@ -491,15 +503,22 @@ public:
 			e.col(1) = V.row(i3) - V.row(i2);
 			e.col(2) = V.row(i1) - V.row(i3);;
 
-			Vector3d Fni = fN.row(i);
-			double Ari = Ar(i);
+			Vector3d Fni = fN.row(i); // 得出这个面的法向量
+			double Ari = Ar(i);  // 得出这个面的面积的两倍
 
 			//grad3_3f(:,[3*i,3*i-2,3*i-1])=[0,-Fni(3), Fni(2);Fni(3),0,-Fni(1);-Fni(2),Fni(1),0]*e/(2*Ari);
+
+			// n_M = 
+			// [0, -Fni(2), Fni(1);
+			// Fni(2), 0, -Fni(1);
+			// -Fni(1), Fni(0), 0]
+			// 矩阵是一个 3x3 的反对称矩阵，用于表示法向量 Fni 的叉乘矩阵。这个矩阵用于将法向量的叉乘操作转换为矩阵乘法，从而简化与法向量的叉乘操作。
 			Matrix3d n_M;
 			n_M << 0, -Fni(2), Fni(1), Fni(2), 0, -Fni(0), -Fni(1), Fni(0), 0;
+
 			VectorXi R(3); R << 0, 1, 2;
 			VectorXi C(3); C << 3 * i + 2, 3 * i, 3 * i + 1;
-			Matrix3d res = ((1. / Ari)*(n_M*e))*P;
+			Matrix3d res = ((1. / Ari)*(n_M*e))*P; // $ res = \left(\frac{1}{Ari} \cdot (n_M \cdot e)\right) \cdot P $
 
 			Dx.row(i) = res.row(0);
 			Dy.row(i) = res.row(1);

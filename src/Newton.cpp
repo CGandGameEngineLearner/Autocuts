@@ -161,6 +161,8 @@ void Newton::linesearch()
 	// 更新 m_x 为新的点集，使用找到的最佳步长 alpha
 	// 这里将 m_x2 数据转换回 Vec 类型，存储更新后的点集
 	m_x = Eigen::Map<Vec>(m_x2.data(), m_x2.rows() * m_x2.cols());
+
+	std::cout<<"Newton::linesearch"<<std::endl;
 }
 
 double Newton::eval_ls(Mat& x)

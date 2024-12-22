@@ -110,7 +110,7 @@ void DistortionSymDir::gradient(const MatX2& X, Vec& g)
 		}
 		Vector6d Dsdi0 = Dsd[0].col(fi);
 		Vector6d Dsdi1 = Dsd[1].col(fi);
-		Vector6d gi = Area(fi)*(Dsdi0*gS + Dsdi1*gs);
+		Vector6d gi = Area(fi)*(Dsdi0*gS + Ds di1*gs);
 		for (int vi = 0; vi < 6; ++vi) {
 			g(Fuv(vi, fi)) += gi(vi);
 		}
@@ -172,7 +172,8 @@ void DistortionSymDir::hessian(const MatX2& X)
 	}
 }
 
-bool DistortionSymDir::updateJ(const MatX2& X)
+bool DistortionSymDir::
+updateJ(const MatX2& X)
 {
 // 	a = D1*U;
 // 	b = D2*U;
@@ -211,20 +212,34 @@ void DistortionSymDir::UpdateSSVDFunction()
 		s.row(i) << S(0), S(3);
 	}
 }
+
+/**
+ * @brief 计算稠密奇异值分解（SVD）导数
+ * 
+ * 该函数计算每个面在两个局部坐标方向上的导数信息，并将结果存储在 Dsd 矩阵中。
+ */
 void DistortionSymDir::ComputeDenseSSVDDerivatives()
 {
-	//different columns belong to diferent faces
-	Eigen::MatrixXd B(D1d*v.col(0).asDiagonal() + D2d*v.col(1).asDiagonal());
-	Eigen::MatrixXd C(D1d*v.col(2).asDiagonal() + D2d*v.col(3).asDiagonal());
+    // 不同的列属于不同的面
+    // 计算矩阵 B 和 C，它们是通过将 D1d 和 D2d 矩阵与 v 矩阵的对角矩阵相乘得到的
+    Eigen::MatrixXd B(D1d * v.col(0).asDiagonal() + D2d * v.col(1).asDiagonal());
+    Eigen::MatrixXd C(D1d * v.col(2).asDiagonal() + D2d * v.col(3).asDiagonal());
 
-	Eigen::MatrixXd t1 = B* u.col(0).asDiagonal();
-	Eigen::MatrixXd t2 = B* u.col(1).asDiagonal();
-	Dsd[0].topRows(t1.rows()) = t1;
-	Dsd[0].bottomRows(t1.rows()) = t2;
-	t1 = C*u.col(2).asDiagonal();
-	t2 = C*u.col(3).asDiagonal();
-	Dsd[1].topRows(t1.rows()) = t1;
-	Dsd[1].bottomRows(t1.rows()) = t2;
+    // 计算中间矩阵 t1 和 t2，它们是通过将矩阵 B 与 u 矩阵的对角矩阵相乘得到的
+    Eigen::MatrixXd t1 = B * u.col(0).asDiagonal();
+    Eigen::MatrixXd t2 = B * u.col(1).asDiagonal();
+    
+    // 将 t1 和 t2 的结果分别存储在 Dsd[0] 矩阵的上半部分和下半部分
+    Dsd[0].topRows(t1.rows()) = t1;
+    Dsd[0].bottomRows(t1.rows()) = t2;
+
+    // 计算中间矩阵 t1 和 t2，它们是通过将矩阵 C 与 u 矩阵的对角矩阵相乘得到的
+    t1 = C * u.col(2).asDiagonal();
+    t2 = C * u.col(3).asDiagonal();
+    
+    // 将 t1 和 t2 的结果分别存储在 Dsd[1] 矩阵的上半部分和下半部分
+    Dsd[1].topRows(t1.rows()) = t1;
+    Dsd[1].bottomRows(t1.rows()) = t2;
 }
 
 inline Eigen::Matrix<double, 6, 6> DistortionSymDir::ComputeFaceConeHessian(const Eigen::Matrix<double, 6, 1> A1, const Eigen::Matrix<double, 6, 1>& A2, double a1x, double a2x)

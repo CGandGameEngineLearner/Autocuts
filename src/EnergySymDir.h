@@ -50,7 +50,7 @@ public:
 	Eigen::MatrixX2d s; //Singular values s[0]>s[1]
 	Eigen::MatrixX4d v; //Singular vectors 
 	Eigen::MatrixX4d u; //Singular vectors 
-	Eigen::MatrixXd Dsd[2]; //singular values dense derivatives s[0]>s[1]
+	Eigen::MatrixXd Dsd[2]; //singular values dense derivatives s[0]>s[1] 奇异值的稠密导数，s[0] > s[1] 保存了奇异值关于 UV 的偏导数
 
 	//SVD methods
 	bool updateJ(const MatX2& X);
@@ -66,9 +66,9 @@ public:
 	//distortion
 	Eigen::VectorXd Efi;     //Efi=sum(Ef_dist.^2,2), for data->Efi history
 
-	Eigen::MatrixXi Fuv;                             //F of cut mesh for u and v indices 6XnumF
+	Eigen::MatrixXi Fuv;                             //F of cut mesh for u and v indices 6XnumF 切割网格的 F 矩阵，用于 u 和 v 索引，大小为 6*面片数量
 	Eigen::VectorXd Area;
-	Eigen::Matrix3Xd D1d, D2d;						//dense mesh derivative matrices
+	Eigen::Matrix3Xd D1d, D2d;						//dense mesh derivative matrices 稠密网格导数矩阵
 
 	Eigen::SparseMatrix<double> a1, a1t, a2, a2t, b1, b1t, b2, b2t;     //constant matrices for cones calcualtion
 	Eigen::MatrixXd a1d, a2d, b1d, b2d;					//dense constant matrices for cones calcualtion
