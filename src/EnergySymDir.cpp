@@ -56,6 +56,8 @@ void DistortionSymDir::init(const MatX3& V, const MatX3i& F, const MatX2& Vs, co
 	D1d=D1cols.transpose();
 	D2d=D2cols.transpose();
 
+	// cout << "D1d: shape:" << D1d.rows() << " " << D1d.cols() << endl;
+
 	//columns belong to different faces
 	a1d.resize(6, numF);
 	a2d.resize(6, numF);
@@ -110,7 +112,9 @@ void DistortionSymDir::gradient(const MatX2& X, Vec& g)
 		}
 		Vector6d Dsdi0 = Dsd[0].col(fi);
 		Vector6d Dsdi1 = Dsd[1].col(fi);
-		Vector6d gi = Area(fi)*(Dsdi0*gS + Dsdi1*gs);
+		cout << "gS:" << gS << " gs:" << gs << endl;
+		Vector6d gi = Area(fi) * (Dsdi0 * gS + Dsdi1 * gs);
+		cout << "Distortion gi: " << gi << endl;
 		for (int vi = 0; vi < 6; ++vi) {
 			g(Fuv(vi, fi)) += gi(vi);
 		}
@@ -202,19 +206,33 @@ updateJ(const MatX2& X)
 };
 void DistortionSymDir::UpdateSSVDFunction()
 {
-	cout <<"DistortionSymDir::UpdateSSVDFunction a.size() = " << a.size() << endl;
+	//cout <<"DistortionSymDir::UpdateSSVDFunction a.size() = " << a.size() << endl;
 #pragma omp parallel for num_threads(24)
 	for (int i = 0; i < a.size(); i++)
 	{
 		Eigen::Matrix2d A;
 		Matrix2d U, S, V;
 		A << a[i], b[i], c[i], d[i];
+		cout << "DistortionSymDir::UpdateSSVDFunction J " << endl;
+		cout << A << endl;
 		//std::cout<< "Distortion J shape: "<< A.rows() << " " << A.cols() << std::endl;
 		Utils::SSVD2x2(A, U, S, V);
 		u.row(i) << U(0), U(1), U(2), U(3);
 		v.row(i) << V(0), V(1), V(2), V(3);
 		
 		s.row(i) << S(0), S(3);
+
+		cout << "DistortionSymDir::UpdateSSVDFunction U" << endl;
+		cout << U << endl;
+
+		cout << "DistortionSymDir::UpdateSSVDFunction S" << endl;
+		cout << S << endl;
+
+		cout << "DistortionSymDir::UpdateSSVDFunction V" << endl;
+		cout << V << endl;
+
+		//cout << "DistortionSymDir::UpdateSSVDFunction u" << endl;
+		//cout << u << endl;
 
 		//cout << "Distortion singular values:" << endl;
 		//cout<<s<<endl;
@@ -226,16 +244,32 @@ void DistortionSymDir::ComputeDenseSSVDDerivatives()
 {
     // 不同的列属于不同的面
     // 计算矩阵 B 和 C，它们是通过将 D1d 和 D2d 矩阵与 v 矩阵的对角矩阵相乘得到的
-	// B = D1d * diag(V)
-	// C = D1d * diag(V)
+	// D1d.D2d shape: 3 * number of faces
+	// v shape: number of faces * 4
+	// B shape: 3 * number of faces 
     Eigen::MatrixXd B(D1d * v.col(0).asDiagonal() + D2d * v.col(1).asDiagonal());
     Eigen::MatrixXd C(D1d * v.col(2).asDiagonal() + D2d * v.col(3).asDiagonal());
 
+	cout << "DistortionSymDir::ComputeDenseSSVDDerivatives B:" << endl;
+	cout << B << endl;
+
+	cout << "DistortionSymDir::ComputeDenseSSVDDerivatives C:" << endl;
+	cout << C << endl;
+
+	cout << "DistortionSymDir::ComputeDenseSSVDDerivatives u" << endl;
+	cout << u << endl;
+
     // 计算中间矩阵 t1 和 t2，它们是通过将矩阵 B 与 u 矩阵的对角矩阵相乘得到的
+	// u shape: number of faces * 4
+	// t1,t2 shape: 3 * number of faces 
+	// t1 对应u轴
+	// t2 对应v轴
     Eigen::MatrixXd t1 = B * u.col(0).asDiagonal();
     Eigen::MatrixXd t2 = B * u.col(1).asDiagonal();
-    
+	// cout << "t1 shape :" << t1.rows() <<" " << t1.cols() << endl;
+
     // 将 t1 和 t2 的结果分别存储在 Dsd[0] 矩阵的上半部分和下半部分
+	// Dsd shape: 6 * number of faces
     Dsd[0].topRows(t1.rows()) = t1;
     Dsd[0].bottomRows(t1.rows()) = t2;
 

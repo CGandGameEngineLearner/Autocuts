@@ -124,9 +124,9 @@ void Separation::value(const MatX2& X, double& f)
     // Store values before taking painting into account
     f_sep_per_pair = f_per_pair;
 
-    std::cout << "Size of connect_alphas: " << connect_alphas.rows() << " x " << connect_alphas.cols() << std::endl;
-    std::cout << "Size of no_seam_constraints_per_pair: " << no_seam_constraints_per_pair.rows() << " x " << no_seam_constraints_per_pair.cols() << std::endl;
-    std::cout << "Size of EsepP_squared_rowwise_sum: " << EsepP_squared_rowwise_sum.rows() << " x " << EsepP_squared_rowwise_sum.cols() << std::endl;
+    //std::cout << "Size of connect_alphas: " << connect_alphas.rows() << " x " << connect_alphas.cols() << std::endl;
+    //std::cout << "Size of no_seam_constraints_per_pair: " << no_seam_constraints_per_pair.rows() << " x " << no_seam_constraints_per_pair.cols() << std::endl;
+    //std::cout << "Size of EsepP_squared_rowwise_sum: " << EsepP_squared_rowwise_sum.rows() << " x " << EsepP_squared_rowwise_sum.cols() << std::endl;
 
     // 添加绘画的吸引力
     // Add attraction force from painting

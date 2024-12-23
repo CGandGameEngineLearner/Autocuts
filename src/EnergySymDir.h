@@ -53,7 +53,7 @@ public:
 
 	//singular values dense derivatives s[0]>s[1] 奇异值的稠密导数，s[0] > s[1] 保存了奇异值关于 UV 的偏导数
 	//两个矩阵的形状都为 6*面片数量 每一列为一个面片的导数
-	//Dsd[0] 保存了 s[0] 的导数，Dsd[1] 保存了 s[1] 的导数
+	//Dsd[0] 保存了 ∂S/∂u和∂S/∂v Dsd[1] 保存了 ∂s/∂u和∂s/∂v 
 	//相当于两个奇异值关于 UV 的偏导数
 	Eigen::MatrixXd Dsd[2];
 
@@ -84,7 +84,7 @@ public:
 	Eigen::VectorXd Efi;     //Efi=sum(Ef_dist.^2,2), for data->Efi history
 
 	Eigen::MatrixXi Fuv;                             //F of cut mesh for u and v indices 6XnumF 切割网格的 F 矩阵，用于 u 和 v 索引，大小为 6*面片数量
-	Eigen::VectorXd Area;
+	Eigen::VectorXd Area;                      // 保存了每个三角形面的面积
 	Eigen::Matrix3Xd D1d, D2d;						//dense mesh derivative matrices 稠密网格导数矩阵
 
 	Eigen::SparseMatrix<double> a1, a1t, a2, a2t, b1, b1t, b2, b2t;     //constant matrices for cones calcualtion
