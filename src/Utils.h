@@ -509,7 +509,7 @@ public:
 			Matrix3d e;
 			e.col(0) = V.row(i2) - V.row(i1); // P2 - P1
 			e.col(1) = V.row(i3) - V.row(i2); // P3 - P2
-			e.col(2) = V.row(i1) - V.row(i3);;// P1 - P3
+			e.col(2) = V.row(i1) - V.row(i3); // P1 - P3
 
 			Vector3d Fni = fN.row(i); // 得出这个面的法向量
 			double Ari = Ar(i);  // 得出这个面的面积的两倍
