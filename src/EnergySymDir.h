@@ -88,11 +88,13 @@ public:
 	Eigen::Matrix3Xd D1d, D2d;						//dense mesh derivative matrices 稠密网格导数矩阵
 
 	Eigen::SparseMatrix<double> a1, a1t, a2, a2t, b1, b1t, b2, b2t;     //constant matrices for cones calcualtion
+
+	// 6 * num of faces
 	Eigen::MatrixXd a1d, a2d, b1d, b2d;					//dense constant matrices for cones calcualtion
 
 //per face hessians vector
    std::vector<Eigen::Matrix<double,6,6>> Hi;
    // pardiso variables
-   vector<int> II, JJ;
-   vector<double> SS;
+   vector<int> II, JJ; // 海森矩阵的引索
+   vector<double> SS; // 对应引索下的值
 };

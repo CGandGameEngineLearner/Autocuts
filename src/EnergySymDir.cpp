@@ -63,7 +63,7 @@ void DistortionSymDir::init(const MatX3& V, const MatX3i& F, const MatX2& Vs, co
 	a2d.resize(6, numF);
 	b1d.resize(6, numF);
 	b2d.resize(6, numF);
-
+	// a1d shape: 6 * num of faces
 	a1d.topRows(3) = 0.5*D1d;
 	a1d.bottomRows(3) = 0.5*D2d;
 
@@ -284,17 +284,17 @@ void DistortionSymDir::ComputeDenseSSVDDerivatives()
 
 inline Eigen::Matrix<double, 6, 6> DistortionSymDir::ComputeFaceConeHessian(const Eigen::Matrix<double, 6, 1> A1, const Eigen::Matrix<double, 6, 1>& A2, double a1x, double a2x)
 {
-	double f2 = a1x*a1x + a2x*a2x;
+	double f2 = a1x*a1x + a2x*a2x;//这里应该是求的f2范数（梯度模的平方）
 	double invf = 1.0/sqrt(f2);
 	double invf3 = invf*invf*invf;
 
-	Matrix6d A1A1t = A1*A1.transpose();
+	Matrix6d A1A1t = A1*A1.transpose();//A1： a1d.topRows(3) = 0.5 * D1d; a1d.bottomRows(3) = 0.5 * D2d;
 	Matrix6d A2A2t = A2*A2.transpose();
 	Matrix6d A1A2t = A1*A2.transpose();
 	Matrix6d A2A1t = A1A2t.transpose();
 
 
-	double a2 = a1x*a1x; 
+	double a2 = a1x*a1x;  //来源于131-135，同时取决于第269行方法ComputeConvexConcaveFaceHessian的判断结果，a1x和a2x的值会有所不同
 	double b2 = a2x*a2x; 
 	double ab = a1x*a2x; 
 
@@ -312,6 +312,9 @@ inline Mat6 DistortionSymDir::ComputeConvexConcaveFaceHessian(const Vec6& a1, co
 	double wbeta = gradfS - gradfs;
 	if (wbeta > 1e-7)
 		H += wbeta*ComputeFaceConeHessian(b1, b2, cY, dY);
+
+	cout << "DistortionSymDir::ComputeFaceConeHessian H:" << endl;
+	cout << H << endl;
 	return H;
 }
 
