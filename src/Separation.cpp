@@ -70,11 +70,25 @@ void Separation::value(const MatX2& X, double& f)
 {
     // 计算 EsepP = Esep * X
     // Compute EsepP = Esep * X
+    // EsepP 形状为:与其他面相连的顶点数*2
+    // 表示与其他面相连的顶点的坐标
     EsepP = Esep * X;
+
+    cout << "Separation::value::Esep shape:" << Esep.rows() << " " <<  Esep.cols() << endl;
+    cout << "Esep:" << endl;
+    cout << Esep << endl;
+
+    cout << "Separation::value::EsepP shape:" << EsepP.rows() << " " << EsepP.cols() << endl;
+    cout << "EsepP:"<< endl;
+    cout << EsepP << endl;
 
     // 计算每行的平方和
     // Compute the squared sum of each row
     EsepP_squared_rowwise_sum = EsepP.array().pow(2.0).rowwise().sum();
+
+    cout << "Separation::value::EsepP_squared_rowwise_sum shape:" << EsepP_squared_rowwise_sum.rows() << " " << EsepP_squared_rowwise_sum.cols() << endl;
+    cout << "EsepP_squared_rowwise_sum:" << endl;
+    cout << EsepP_squared_rowwise_sum << endl;
 
     // 加上 delta
     // Add delta
@@ -175,6 +189,7 @@ void Separation::gradient(const MatX2& X, Vec& g)
 		case SeparationEnergy::QUOTIENT:
 		case SeparationEnergy::QUOTIENT_NEW:
 		{
+            // 创建一个矩阵 所有元素都为delta
 			Vec d_vec = Vec::Constant(EsepP_squared_rowwise_sum.rows(), delta);
 			Vec x_plus_d = EsepP_squared_rowwise_sum + d_vec;
 			Vec d = d_vec.cwiseQuotient(x_plus_d.cwiseAbs2());

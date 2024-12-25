@@ -213,8 +213,8 @@ void DistortionSymDir::UpdateSSVDFunction()
 		Eigen::Matrix2d A;
 		Matrix2d U, S, V;
 		A << a[i], b[i], c[i], d[i];
-		cout << "DistortionSymDir::UpdateSSVDFunction J " << endl;
-		cout << A << endl;
+		//cout << "DistortionSymDir::UpdateSSVDFunction J " << endl;
+		//cout << A << endl;
 		//std::cout<< "Distortion J shape: "<< A.rows() << " " << A.cols() << std::endl;
 		Utils::SSVD2x2(A, U, S, V);
 		u.row(i) << U(0), U(1), U(2), U(3);
@@ -222,14 +222,14 @@ void DistortionSymDir::UpdateSSVDFunction()
 		
 		s.row(i) << S(0), S(3);
 
-		cout << "DistortionSymDir::UpdateSSVDFunction U" << endl;
-		cout << U << endl;
+		//cout << "DistortionSymDir::UpdateSSVDFunction U" << endl;
+		//cout << U << endl;
 
-		cout << "DistortionSymDir::UpdateSSVDFunction S" << endl;
-		cout << S << endl;
+		//cout << "DistortionSymDir::UpdateSSVDFunction S" << endl;
+		//cout << S << endl;
 
-		cout << "DistortionSymDir::UpdateSSVDFunction V" << endl;
-		cout << V << endl;
+		//cout << "DistortionSymDir::UpdateSSVDFunction V" << endl;
+		//cout << V << endl;
 
 		//cout << "DistortionSymDir::UpdateSSVDFunction u" << endl;
 		//cout << u << endl;
@@ -250,14 +250,14 @@ void DistortionSymDir::ComputeDenseSSVDDerivatives()
     Eigen::MatrixXd B(D1d * v.col(0).asDiagonal() + D2d * v.col(1).asDiagonal());
     Eigen::MatrixXd C(D1d * v.col(2).asDiagonal() + D2d * v.col(3).asDiagonal());
 
-	cout << "DistortionSymDir::ComputeDenseSSVDDerivatives B:" << endl;
-	cout << B << endl;
+	//cout << "DistortionSymDir::ComputeDenseSSVDDerivatives B:" << endl;
+	//cout << B << endl;
 
-	cout << "DistortionSymDir::ComputeDenseSSVDDerivatives C:" << endl;
-	cout << C << endl;
+	//cout << "DistortionSymDir::ComputeDenseSSVDDerivatives C:" << endl;
+	//cout << C << endl;
 
-	cout << "DistortionSymDir::ComputeDenseSSVDDerivatives u" << endl;
-	cout << u << endl;
+	//cout << "DistortionSymDir::ComputeDenseSSVDDerivatives u" << endl;
+	//cout << u << endl;
 
     // 计算中间矩阵 t1 和 t2，它们是通过将矩阵 B 与 u 矩阵的对角矩阵相乘得到的
 	// u shape: number of faces * 4
@@ -313,8 +313,8 @@ inline Mat6 DistortionSymDir::ComputeConvexConcaveFaceHessian(const Vec6& a1, co
 	if (wbeta > 1e-7)
 		H += wbeta*ComputeFaceConeHessian(b1, b2, cY, dY);
 
-	cout << "DistortionSymDir::ComputeFaceConeHessian H:" << endl;
-	cout << H << endl;
+	//cout << "DistortionSymDir::ComputeFaceConeHessian H:" << endl;
+	//cout << H << endl;
 	return H;
 }
 
@@ -370,4 +370,5 @@ void DistortionSymDir::prepare_hessian(int n)
 		PushPair(lhbr + 2, rhbc + 2);
 	}
 	SS = vector<double>(II.size(), 0.);
+	//cout<<"DistortionSymDir::prepare_hessian SS.size()= " << SS.size() << endl;
 }
